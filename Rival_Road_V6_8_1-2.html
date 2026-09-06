@@ -1,0 +1,3497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RIVAL IDLE</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080d;
+  --panel: #0e0e16;
+  --surface: #16161f;
+  --border: #262633;
+  --border2: #38384a;
+  --text: #dcdce8;
+  --muted: #6e6e88;
+  --gold: #b8a8ff;
+  --gold2: #8a7ae0;
+  --red: #ff5470;
+  --green: #46e0a8;
+  --blue: #4090e0;
+  --orange: #b8a8ff;
+  --accent: #b8a8ff;
+  --rift: #8a5cf6;
+  --rift-dim: rgba(138, 92, 246, 0.15);
+  --display: 'Cinzel', serif;
+  --head: 'Space Grotesk', sans-serif;
+  --mono: 'Share Tech Mono', monospace;
+  --body: 'Space Grotesk', sans-serif;
+  --nav-h: 56px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--body); overflow: hidden; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── HEADER ── */
+#hdr {
+  display: flex; flex-direction: column;
+  padding: 6px 12px 5px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  flex-shrink: 0; gap: 5px;
+}
+#hdr::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rift), transparent);
+  opacity: 0.7; transition: background .4s;
+}
+#hdr-row1 { display: flex; align-items: center; justify-content: space-between; }
+#hdr-title { font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--rift); letter-spacing: 2px; transition: color .4s; }
+#hdr-lv-wrap { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+#hdr-lv-wrap b { color: var(--orange); font-size: 13px; }
+#hdr-row2 { display: flex; gap: 5px; }
+.hdr-pill {
+  display: flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 2px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 9px; white-space: nowrap; flex: 1;
+  justify-content: center;
+}
+.hdr-pill span { color: var(--muted); margin-right: 2px; }
+.hdr-pill b { color: var(--text); }
+.hdr-pill.gold b { color: var(--gold); }
+.hdr-pill.lv b { color: var(--orange); }
+
+/* ── XP BAR ── */
+#xp-bar-wrap {
+  position: relative; height: 18px; background: var(--surface);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; overflow: hidden;
+}
+#xp-bar { height: 100%; background: var(--orange); width: 0%; transition: width .3s; opacity: 0.35; }
+#xp-label {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; color: var(--text); pointer-events: none;
+  letter-spacing: 0.03em;
+}
+
+/* ── CREW CARDS ── */
+.crew-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; margin-bottom: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; font-family: var(--mono);
+}
+.crew-card.active { border-color: var(--gold); }
+.crew-card.locked { opacity: 0.35; }
+.crew-icon { font-size: 18px; flex-shrink: 0; }
+.crew-info { flex: 1; }
+.crew-name { font-size: 12px; color: var(--text); }
+.crew-flavour { font-size: 9px; color: var(--muted); margin-top: 1px; }
+.crew-bonus { font-size: 11px; color: var(--orange); white-space: nowrap; flex-shrink: 0; }
+#offline-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(10,8,5,0.92);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding: 32px 24px;
+}
+#offline-overlay.active { display: flex; }
+#offline-overlay .ov-title {
+  font-family: var(--display); font-weight: 700; font-size: 26px; color: var(--rift);
+  letter-spacing: 3px; text-align: center;
+}
+#offline-overlay .ov-moon {
+  font-size: 52px; line-height: 1;
+}
+#offline-overlay .ov-card {
+  background: var(--panel); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 18px 28px; width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+#offline-overlay .ov-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--mono); font-size: 12px;
+}
+#offline-overlay .ov-row span { color: var(--muted); }
+#offline-overlay .ov-row b { color: var(--text); font-size: 15px; }
+#offline-overlay .ov-row b.accent { color: var(--orange); }
+#offline-overlay .ov-enemy {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  text-align: center; letter-spacing: 1px;
+}
+#offline-overlay .ov-btn {
+  width: 100%; max-width: 320px;
+  padding: 13px; border: 1px solid var(--orange); background: transparent;
+  color: var(--orange); font-family: var(--head); font-size: 16px;
+  letter-spacing: 3px; cursor: pointer; border-radius: 2px;
+}
+#offline-overlay .ov-btn:active { background: rgba(224,128,48,0.15); }
+#nav {
+  display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
+  background: var(--panel); border-top: 1px solid var(--border); z-index: 100;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: none; background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px; cursor: pointer;
+  transition: color .2s; border-top: 2px solid transparent;
+}
+.nav-btn .ni { font-size: 18px; line-height: 1; }
+.nav-btn.active { color: var(--rift); border-top-color: var(--rift); transition: color .4s, border-color .4s; }
+
+/* ── PAGES ── */
+#pages { flex: 1; overflow: hidden; position: relative; }
+.page {
+  position: absolute; inset: 0; bottom: var(--nav-h);
+  overflow-y: auto; padding: 12px 14px 20px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.page.active { opacity: 1; pointer-events: all; }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 4px; margin-bottom: 12px; overflow: hidden;
+}
+.ptitle {
+  font-family: var(--head); font-size: 13px; letter-spacing: 3px;
+  color: var(--muted); padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── COMBAT ── */
+#combat-zone-name {
+  font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--rift);
+  text-align: center; padding: 8px 0 2px; transition: color .4s;
+}
+#combat-enemy-name {
+  font-family: var(--head); font-size: 12px; letter-spacing: 2px;
+  color: var(--muted); text-align: center; margin-bottom: 6px;
+}
+.combat-hp-row { display: flex; align-items: center; gap: 6px; padding: 0 10px 7px; }
+.combat-hp-label { font-family: var(--mono); font-size: 9px; color: var(--muted); width: 30px; }
+.hp-bar-bg {
+  flex: 1; height: 8px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 2px; overflow: hidden;
+}
+.hp-bar { height: 100%; border-radius: 2px; transition: width .1s linear; }
+.hp-bar.player { background: var(--green); }
+.hp-bar.enemy { background: var(--red); }
+.combat-hp-val { font-family: var(--mono); font-size: 9px; color: var(--text); width: 80px; text-align: right; }
+
+#combat-log {
+  margin: 0 10px 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 3px;
+  height: 80px; overflow-y: auto; padding: 5px 7px;
+  font-family: var(--mono); font-size: 10px; line-height: 1.6;
+}
+/* enemy stats toggle */
+#enemy-stats-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  margin: 0 10px 4px; padding: 3px 8px; cursor: pointer;
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 2px;
+  background: var(--surface); user-select: none;
+}
+#enemy-stats-toggle:active { opacity: .7; }
+#enemy-stats-toggle .tog-arrow { transition: transform .2s; }
+#enemy-stats-toggle.open .tog-arrow { transform: rotate(180deg); }
+#enemy-stats-panel {
+  display: none; margin: 0 10px 6px; padding: 6px 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 2px;
+  font-family: var(--mono); font-size: 9px; line-height: 1.8;
+}
+#enemy-stats-panel.open { display: block; }
+#enemy-stats-panel .estat { color: var(--muted); }
+#enemy-stats-panel .estat b { color: var(--text); }
+.log-hit { color: var(--red); }
+.log-kill { color: var(--gold); }
+.log-lvl { color: var(--orange); }
+.log-heal { color: var(--green); }
+.log-sys { color: var(--muted); }
+
+.combat-btns { display: flex; gap: 8px; padding: 0 10px 10px; }
+.mega-mult-row { display: flex; gap: 6px; }
+.mega-mult-btn {
+  flex: 1; padding: 8px 0; border-radius: 4px; border: 1px solid var(--border2);
+  background: transparent; color: var(--muted); font-family: var(--mono); font-size: 12px;
+  cursor: pointer;
+}
+.mega-mult-btn.active { border-color: var(--red); color: var(--red); background: rgba(255,60,60,.08); }
+.mega-mult-btn:active { background: rgba(255,255,255,.06); }
+.combat-btn {
+  flex: 1; font-family: var(--head); font-size: 14px; letter-spacing: 3px;
+  padding: 12px; border-radius: 3px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); cursor: pointer; transition: all .2s;
+}
+.combat-btn.primary { border-color: var(--gold2); color: var(--gold); }
+.combat-btn.primary:active { background: rgba(240,192,64,.08); }
+.combat-btn.running { border-color: var(--red); color: var(--red); }
+
+/* ── STAT CARDS ── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px 10px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; padding: 7px 6px; text-align: center;
+}
+.stat-card-label { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+.stat-card-val { font-family: var(--head); font-size: 18px; color: var(--text); margin: 1px 0; }
+.stat-card-sub { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+
+/* ── ZONES ── */
+.zone-card {
+  margin: 0 14px 10px; border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden; cursor: pointer;
+  background: var(--surface); transition: border-color .2s;
+}
+.zone-card.active-zone { border-color: var(--gold2); }
+.zone-card:active { opacity: .8; }
+.zone-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+}
+.zone-icon { font-size: 22px; }
+.zone-info { flex: 1; }
+.zone-name { font-family: var(--head); font-size: 14px; letter-spacing: 2px; color: var(--text); }
+.zone-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+.zone-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  padding: 3px 7px; border-radius: 2px; border: 1px solid;
+}
+.zone-badge.current { border-color: var(--rift); color: var(--rift); }
+.zone-badge.unlocked { border-color: var(--green); color: var(--green); }
+.zone-badge.tough { border-color: var(--red); color: var(--red); }
+.zone-badge.locked { border-color: var(--border); color: var(--muted); }
+
+/* ── PRESTIGE ── */
+.prestige-box { padding: 14px; }
+.prestige-stat { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.prestige-stat b { color: var(--text); }
+.prestige-btn {
+  width: 100%; font-family: var(--head); font-size: 16px; letter-spacing: 4px;
+  padding: 14px; border-radius: 3px; border: 1px solid var(--gold2);
+  background: transparent; color: var(--gold); cursor: pointer; transition: all .2s;
+  margin-top: 10px;
+}
+.prestige-btn:active { background: rgba(240,192,64,.08); }
+.prestige-modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+  z-index:999; align-items:center; justify-content:center;
+}
+.prestige-modal-overlay.open { display:flex; }
+.prestige-modal {
+  background:var(--panel); border:1px solid var(--border2);
+  border-radius:10px; padding:20px; width:92%; max-width:360px;
+}
+.prestige-modal-title {
+  font-family:var(--mono); font-size:13px; color:var(--orange);
+  text-align:center; letter-spacing:.1em; margin-bottom:4px;
+}
+.prestige-modal-sub {
+  font-family:var(--mono); font-size:10px; color:var(--muted);
+  text-align:center; margin-bottom:14px;
+}
+.prestige-choice-btn {
+  display:flex; align-items:center; gap:10px;
+  width:100%; background:transparent; border:1px solid var(--border2);
+  border-radius:6px; padding:10px 12px; margin-bottom:8px;
+  cursor:pointer; color:var(--text); text-align:left; transition:border-color .15s, background .15s;
+}
+.prestige-choice-btn:hover { border-color:var(--orange); background:rgba(240,192,64,.06); }
+.prestige-choice-icon { font-size:20px; flex-shrink:0; }
+.prestige-choice-info { flex:1; }
+.prestige-choice-name { font-family:var(--mono); font-size:12px; color:var(--orange); }
+.prestige-choice-desc { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px; }
+.prestige-choice-count { font-family:var(--mono); font-size:10px; color:var(--border2); flex-shrink:0; }
+.prestige-cancel-btn {
+  width:100%; background:transparent; border:1px solid var(--border2);
+  border-radius:6px; padding:8px; margin-top:4px; cursor:pointer;
+  color:var(--muted); font-family:var(--mono); font-size:11px;
+}
+.pool-bar {
+  font-family:var(--mono); font-size:12px; color:var(--orange);
+  text-align:center; margin-bottom:12px; padding:8px;
+  border:1px solid var(--gold2); border-radius:6px;
+}
+.alloc-row {
+  display:flex; align-items:center; gap:10px;
+  width:100%; border:1px solid var(--border2);
+  border-radius:6px; padding:8px 10px; margin-bottom:8px;
+}
+.alloc-icon { font-size:18px; flex-shrink:0; }
+.alloc-info { flex:1; min-width:0; }
+.alloc-name { font-family:var(--mono); font-size:11px; color:var(--orange); }
+.alloc-desc { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:1px; }
+.alloc-stepper { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.alloc-btn {
+  width:26px; height:26px; border-radius:4px; border:1px solid var(--border2);
+  background:transparent; color:var(--text); font-family:var(--mono); font-size:14px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.alloc-btn:active { background:rgba(255,255,255,.08); }
+.alloc-input {
+  width:44px; text-align:center; background:transparent; border:1px solid var(--border2);
+  border-radius:4px; color:var(--text); font-family:var(--mono); font-size:12px; padding:4px 2px;
+}
+.alloc-confirm-btn {
+  width:100%; font-family:var(--head); font-size:14px; letter-spacing:3px;
+  padding:12px; border-radius:3px; border:1px solid var(--gold2);
+  background:transparent; color:var(--gold); cursor:pointer; margin-top:6px;
+}
+.alloc-confirm-btn:disabled { opacity:.4; cursor:default; }
+.alloc-confirm-btn:not(:disabled):active { background: rgba(240,192,64,.08); }
+.weaken-zone-header {
+  display:flex; align-items:center; gap:8px; padding:10px 12px;
+  cursor:pointer; border-bottom:1px solid var(--border2);
+}
+.weaken-zone-header .wz-icon { font-size:16px; }
+.weaken-zone-header .wz-name { font-family:var(--mono); font-size:11px; color:var(--text); flex:1; }
+.weaken-zone-header .wz-toggle { font-size:10px; color:var(--muted); transition:transform .15s; }
+.weaken-zone-header .wz-toggle.open { transform:rotate(180deg); }
+.weaken-zone-body { display:none; padding:8px 12px 10px; }
+.weaken-zone-body.open { display:block; }
+.weaken-enemy-row {
+  display:flex; align-items:center; gap:8px; padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.weaken-enemy-row:last-child { border-bottom:none; }
+.weaken-enemy-info { flex:1; min-width:0; }
+.weaken-enemy-name { font-family:var(--mono); font-size:11px; color:var(--text); }
+.weaken-enemy-atk { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:1px; }
+.weaken-enemy-atk .reduced { color:var(--green); }
+.impexp-textarea {
+  width:100%; min-height:110px; background:rgba(255,255,255,.02);
+  border:1px solid var(--border2); border-radius:6px; padding:8px;
+  font-family:var(--mono); font-size:10px; color:var(--text);
+  resize:vertical; box-sizing:border-box; line-height:1.5;
+}
+.impexp-action-btn {
+  width:100%; background:transparent; border:1px solid var(--blue);
+  border-radius:6px; padding:10px; margin-top:10px; cursor:pointer;
+  color:var(--blue); font-family:var(--mono); font-size:12px;
+  letter-spacing:.05em; text-align:center;
+}
+.impexp-action-btn:active { background:rgba(64,144,224,.1); }
+
+/* ── ENEMY ROWS ── */
+.enemy-row {
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.enemy-row:last-child { border-bottom: none; }
+.enemy-row-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; cursor: pointer; transition: background .15s;
+}
+.enemy-row-header:active { background: rgba(255,255,255,.03); }
+.enemy-num {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  min-width: 22px;
+}
+.enemy-name-wrap { flex: 1; }
+.enemy-name { font-family: var(--head); font-size: 13px; letter-spacing: 1px; }
+.enemy-lv { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 1px; }
+.enemy-select-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  padding: 4px 8px; border-radius: 2px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: all .2s; white-space: nowrap;
+}
+.enemy-select-btn.active { border-color: var(--gold); color: var(--gold); }
+.enemy-select-btn.beaten { border-color: var(--green); color: var(--green); }
+.enemy-select-btn.can-select { border-color: var(--border2); color: var(--text); }
+.enemy-select-btn.locked { border-color: var(--border); color: var(--muted); opacity: 0.5; cursor: not-allowed; }
+.enemy-toggle { font-size: 12px; color: var(--muted); padding: 0 2px; transition: transform .2s; }
+.enemy-toggle.open { transform: rotate(180deg); }
+.enemy-stats-panel {
+  display: none; padding: 0 14px 10px 38px;
+  font-family: var(--mono); font-size: 10px;
+}
+.enemy-stats-panel.open { display: block; }
+.enemy-stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+.enemy-stat-item { color: var(--muted); }
+.enemy-stat-item b { color: var(--text); }
+
+/* ── NOTIFY ── */
+#notif {
+  position: fixed; bottom: calc(var(--nav-h) + 12px); left: 14px; right: 14px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 3px;
+  padding: 9px 14px; font-family: var(--mono); font-size: 11px; text-align: center;
+  opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 200;
+}
+#notif.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div id="hdr-row1">
+      <div id="hdr-title">⚔️ RIVAL ROAD</div>
+      <div id="hdr-lv-wrap">LV <b id="hdr-lv">1</b></div>
+    </div>
+    <div id="hdr-row2">
+      <div class="hdr-pill gold"><span>GOLD</span><b id="hdr-gold">0</b></div>
+      <div class="hdr-pill" id="bounty-pill"><span>BOUNTY</span><b id="hdr-bounty">฿0</b></div>
+      <div class="hdr-pill"><span>PRE</span><b id="hdr-pre">0</b></div>
+    </div>
+  </div>
+  <div id="xp-bar-wrap"><div id="xp-bar"></div><span id="xp-label">XP: 0 / 100</span></div>
+
+  <div id="pages">
+
+    <!-- FIGHT PAGE -->
+    <div class="page active" id="page-fight">
+      <div class="panel">
+        <div id="combat-zone-name">Vox Machina Camp</div>
+        <div style="text-align:center;font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:2px;letter-spacing:1px;">
+          <span id="bounty-tier-name" style="font-weight:700">Unknown</span>
+        </div>
+        <div id="combat-enemy-name">— IDLE —</div>
+        <div class="combat-hp-row">
+          <div class="combat-hp-label">YOU</div>
+          <div class="hp-bar-bg"><div class="hp-bar player" id="player-hp-bar" style="width:100%"></div></div>
+          <div class="combat-hp-val" id="player-hp-val">100 / 100</div>
+        </div>
+        <div class="combat-hp-row">
+          <div class="combat-hp-label">ENEMY</div>
+          <div class="hp-bar-bg"><div class="hp-bar enemy" id="enemy-hp-bar" style="width:100%"></div></div>
+          <div class="combat-hp-val" id="enemy-hp-val">— / —</div>
+        </div>
+        <div id="combat-log"></div>
+        <div id="enemy-stats-toggle" onclick="toggleEnemyStats()">
+          ENEMY STATS <span class="tog-arrow">▼</span>
+        </div>
+        <div id="enemy-stats-panel">
+          <div id="enemy-stats-content" style="display:flex;gap:12px;flex-wrap:wrap;">
+            <span class="estat">HP <b id="e-stat-hp">—</b></span>
+            <span class="estat">ATK <b id="e-stat-atk">—</b></span>
+            <span class="estat">SPD <b id="e-stat-spd">—</b></span>
+            <span class="estat">XP <b id="e-stat-xp">—</b></span>
+            <span class="estat">GOLD <b id="e-stat-gold">—</b></span>
+          </div>
+        </div>
+        <div class="combat-btns">
+          <button class="combat-btn primary" id="fight-btn" onclick="toggleFight()">⚔ FIGHT</button>
+          <button class="combat-btn" id="heal-btn" onclick="manualHeal()" disabled>💊 HEAL</button>
+        </div>
+        <div style="padding:0 10px 10px;">
+          <button class="combat-btn" id="idle-btn" onclick="toggleOfflineMode()" style="width:100%;font-size:11px;letter-spacing:2px;">
+            ☾ OFFLINE MODE: OFF
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">STATS</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">ATTACK</div>
+            <div class="stat-card-val" id="disp-atk">—</div>
+            <div class="stat-card-sub">dmg/hit</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">HP</div>
+            <div class="stat-card-val" id="disp-hp">—</div>
+            <div class="stat-card-sub">max hp</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">SPEED</div>
+            <div class="stat-card-val" id="disp-spd">—</div>
+            <div class="stat-card-sub">atk/sec</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">HEAL SPEED</div>
+            <div class="stat-card-val" id="disp-healspd">—</div>
+            <div class="stat-card-sub">hp/hr</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleMegaPanel()">
+          <span>MEGA FIGHT MULTIPLIER</span>
+          <span id="mega-panel-toggle" style="font-family:var(--mono);font-size:10px;color:var(--muted);">▼ HIDE</span>
+        </div>
+        <div id="mega-panel-body" style="padding:10px;">
+          <div class="mega-mult-row" id="mega-mult-row">
+            <button class="mega-mult-btn active" data-mult="1" onclick="setMegaMultiplier(1)">1×</button>
+            <button class="mega-mult-btn" data-mult="2" onclick="setMegaMultiplier(2)">2×</button>
+            <button class="mega-mult-btn" data-mult="3" onclick="setMegaMultiplier(3)">3×</button>
+            <button class="mega-mult-btn" data-mult="4" onclick="setMegaMultiplier(4)">4×</button>
+            <button class="mega-mult-btn" data-mult="5" onclick="setMegaMultiplier(5)">5×</button>
+          </div>
+          <div class="mega-mult-row" style="margin-top:6px;">
+            <button class="mega-mult-btn" data-mult="6" onclick="setMegaMultiplier(6)">6×</button>
+            <button class="mega-mult-btn" data-mult="7" onclick="setMegaMultiplier(7)">7×</button>
+            <button class="mega-mult-btn" data-mult="8" onclick="setMegaMultiplier(8)">8×</button>
+            <button class="mega-mult-btn" data-mult="9" onclick="setMegaMultiplier(9)">9×</button>
+            <button class="mega-mult-btn" data-mult="10" onclick="setMegaMultiplier(10)">10×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONES PAGE -->
+    <div class="page" id="page-zones">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        Select any enemy to fight. Tap ▼ to preview their stats. Advance manually when ready.
+      </div>
+      <div id="zone-list"></div>
+    </div>
+
+    <!-- PRESTIGE PAGE -->
+    <div class="page" id="page-prestige">
+      <div class="panel">
+        <div class="ptitle">NEW VOYAGE</div>
+        <div class="prestige-box">
+          <div class="prestige-stat">Current level: <b id="pre-lv">1</b></div>
+          <div class="prestige-stat">Prestiges: <b id="pre-count">0</b></div>
+          <div class="prestige-stat">Available points: <b id="pre-points" style="color:var(--gold)">0</b></div>
+          <div class="prestige-stat">Available weaken points: <b id="pre-weaken-points" style="color:var(--red)">0</b></div>
+          <div class="prestige-stat">Banked levels: <b id="pre-banked">0</b></div>
+          <div class="prestige-stat">XP multiplier now: <b id="pre-xpmult">1.0000×</b></div>
+          <div class="prestige-stat">XP multiplier after: <b id="pre-next">—</b></div>
+          <div class="prestige-stat">SPD bonus: <b id="pre-spd-bonus">×1.0000 (0 picks)</b></div>
+          <div class="prestige-stat">ATK bonus: <b id="pre-atk-bonus">×1.0000 (0 picks)</b></div>
+          <div class="prestige-stat">HP bonus: <b id="pre-hp-bonus">×1.0000 (0 picks)</b></div>
+          <div class="prestige-stat">Heal Speed bonus: <b id="pre-healspd-bonus">×1.0000 (0 picks)</b></div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:12px;line-height:1.8;">
+            Prestiging resets level, gold &amp; upgrades.<br>
+            Banks your current level as points. Spend points anytime across stats or on weakening specific enemies.
+          </div>
+          <button class="prestige-btn" onclick="openPrestigeModal()">◈ PRESTIGE</button>
+          <button class="prestige-btn" onclick="openAllocateModal()" style="border-color:var(--gold);color:var(--gold);">✦ SPEND POINTS</button>
+          <button class="prestige-btn" onclick="openExportModal()" style="margin-top:8px;border-color:var(--blue);color:var(--blue);font-size:12px;padding:9px;letter-spacing:2px;">⬆ EXPORT SAVE</button>
+          <button class="prestige-btn" onclick="openImportModal()" style="margin-top:8px;border-color:var(--blue);color:var(--blue);font-size:12px;padding:9px;letter-spacing:2px;">⬇ IMPORT SAVE</button>
+          <button class="prestige-btn" onclick="resetGame()"
+            style="margin-top:8px;border-color:var(--red);color:var(--red);font-size:13px;">
+            ✕ RESET ALL DATA
+          </button>
+          <div id="save-status" style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:10px;">
+            Never saved
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREW PAGE -->
+    <div class="page" id="page-crew">
+      <div class="panel">
+        <div class="ptitle">🏴‍☠️ CREW</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 14px 10px;line-height:1.7;">
+          Beat enemies to recruit them permanently. Bonuses activate from your 2nd run onwards.
+        </div>
+        <div id="crew-list" style="padding:0 10px 10px;"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-weaken">
+      <div class="panel">
+        <div class="ptitle">💢 WEAKEN ENEMIES</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 14px 10px;line-height:1.7;">
+          Spend prestige points to permanently reduce a specific enemy's attack (0.10 per point, floor 0.15) or HP (2 per point, floor 10). Shares the same point pool as stat allocation.
+        </div>
+        <div class="pool-bar" style="margin:0 14px 10px;">Available: <b id="weaken-pool">0</b> points</div>
+        <div id="weaken-list" style="padding:0 10px 10px;"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-lvreq">
+      <div class="panel">
+        <div class="ptitle">🔓 LEVEL REQUIREMENT</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 14px 10px;line-height:1.7;">
+          Spend normal prestige points to permanently lower a specific enemy's level requirement by 1 per point (floor: level 1).
+        </div>
+        <div class="pool-bar" style="margin:0 14px 10px;">Available: <b id="lvreq-pool">0</b> points</div>
+        <div id="lvreq-list" style="padding:0 10px 10px;"></div>
+      </div>
+    </div>
+
+  </div><!-- pages -->
+<!-- OFFLINE OVERLAY -->
+<div id="offline-overlay">
+  <div class="ov-moon">☾</div>
+  <div class="ov-title">OFFLINE MODE</div>
+  <div class="ov-card">
+    <div class="ov-row"><span>TIME AWAY</span><b id="ov-time">0m 0s</b></div>
+    <div class="ov-row"><span>XP EARNED</span><b class="accent" id="ov-xp">0</b></div>
+    <div class="ov-row"><span>LEVELS GAINED</span><b id="ov-levels">0</b></div>
+  </div>
+  <div class="ov-enemy" id="ov-enemy">— NO ENEMY SELECTED —</div>
+  <button class="ov-btn" onclick="toggleOfflineMode()">☀ GO ONLINE</button>
+</div>
+
+</div><!-- app -->
+
+<div id="nav">
+  <button class="nav-btn active" data-page="fight" onclick="switchPage('fight',this)">
+    <span class="ni">⚔</span>FIGHT
+  </button>
+  <button class="nav-btn" data-page="zones" onclick="switchPage('zones',this)">
+    <span class="ni">🗺</span>ZONES
+  </button>
+  <button class="nav-btn" data-page="prestige" onclick="switchPage('prestige',this)">
+    <span class="ni">◈</span>PRESTIGE
+  </button>
+  <button class="nav-btn" data-page="crew" onclick="switchPage('crew',this)">
+    <span class="ni">🏴‍☠️</span>CREW
+  </button>
+  <button class="nav-btn" data-page="weaken" onclick="switchPage('weaken',this)">
+    <span class="ni">💢</span>WEAKEN
+  </button>
+  <button class="nav-btn" data-page="lvreq" onclick="switchPage('lvreq',this)">
+    <span class="ni">🔓</span>LVL REQ
+  </button>
+</div>
+
+<div id="notif"></div>
+
+<script>
+// ── ZONES DATA ────────────────────────────────────────────────────────────────
+const ZONES = [
+  {
+    id: 'the_sanctum_sanctorum', name: 'The Sanctum Sanctorum', icon: '✋',
+    recLv: 1, color: '#a01818',
+    enemies: [
+      {name:'Ada Wong', lv:1, pwr:1, hp:20, atk:1.391, spd:0.2, xp:4, gold:4.254 },
+      {name:'Anya Forger', lv:2, pwr:2, hp:22, atk:1.5, spd:0.249, xp:4.4, gold:4.68 },
+      {name:'Grog Strongjaw', lv:4, pwr:5, hp:26.964, atk:1.805, spd:0.301, xp:5.393, gold:5.735 },
+      {name:'Winry Rockbell', lv:6, pwr:7, hp:29, atk:1.915, spd:0.326, xp:5.8, gold:6.169 },
+      {name:'Blitzo', lv:8, pwr:10, hp:34, atk:2.226, spd:0.361, xp:6.8, gold:7.232 },
+      {name:'Alastor', lv:10, pwr:13, hp:41, atk:2.666, spd:0.393, xp:8.2, gold:8.721 },
+      {name:'Loulan', lv:12, pwr:16, hp:44.908, atk:2.905, spd:0.415, xp:8.982, gold:9.552 },
+    ]
+  },
+  {
+    id: 'lights_of_the_desert', name: 'Lights of the Desert', icon: '🌃',
+    recLv: 15, color: '#8020a0',
+    enemies: [
+      {name:'Daniel Ricciardo', lv:15, pwr:21, hp:48.324, atk:3.105, spd:0.446, xp:9.665, gold:10.279 },
+      {name:'Penelope', lv:18, pwr:25, hp:53.31, atk:3.406, spd:0.471, xp:10.662, gold:11.339 },
+      {name:'Damian Wayne', lv:21, pwr:30, hp:61.457, atk:3.908, spd:0.495, xp:12.291, gold:13.072 },
+      {name:'Chetney Pock O\'Pea', lv:25, pwr:36, hp:75.22, atk:4.758, spd:0.529, xp:15.044, gold:16 },
+      {name:'Ray Toro', lv:29, pwr:42, hp:89.185, atk:5.615, spd:0.556, xp:17.837, gold:18.97 },
+      {name:'Claire Redfield', lv:33, pwr:48, hp:106.532, atk:6.68, spd:0.584, xp:21.306, gold:22.66 },
+      {name:'Bob Bryar', lv:37, pwr:55, hp:128.441, atk:8.025, spd:0.611, xp:25.688, gold:27.32 },
+    ]
+  },
+  {
+    id: 'vox_machina_camp', name: 'Theatre des Vampires', icon: '🎭',
+    recLv: 41, color: '#701840',
+    enemies: [
+      {name:'Kaiser Michael', lv:41, pwr:62, hp:142.986, atk:8.905, spd:0.637, xp:28.597, gold:30.414 },
+      {name:'Chrome', lv:46, pwr:70, hp:161.204, atk:10.004, spd:0.665, xp:32.241, gold:34.289 },
+      {name:'George Russell', lv:51, pwr:79, hp:200.067, atk:12.375, spd:0.695, xp:40.013, gold:42.556 },
+      {name:'Pete Wentz', lv:56, pwr:88, hp:245.288, atk:15.126, spd:0.72, xp:49.058, gold:52.174 },
+      {name:'Luke Castellan', lv:62, pwr:98, hp:309, atk:18.994, spd:0.75, xp:61.8, gold:65.726 },
+      {name:'Eva Stratt', lv:68, pwr:109, hp:378.917, atk:23.224, spd:0.779, xp:75.783, gold:80.598 },
+    ]
+  },
+  {
+    id: 'central_command', name: 'The Kira Case', icon: '📓',
+    recLv: 74, color: '#404040',
+    enemies: [
+      {name:'Daniel Molloy', lv:74, pwr:120, hp:427.026, atk:26.102, spd:0.807, xp:85.405, gold:90.832 },
+      {name:'Shigaraki Tomura', lv:80, pwr:130, hp:530.358, atk:32.337, spd:0.832, xp:106.072, gold:112.811 },
+      {name:'Krillin', lv:86, pwr:141, hp:660.856, atk:40.199, spd:0.858, xp:132.171, gold:140.569 },
+      {name:'Ragatha', lv:93, pwr:153, hp:846.237, atk:51.347, spd:0.886, xp:169.247, gold:180.001 },
+      {name:'Riz Gukgak', lv:100, pwr:167, hp:1080.455, atk:65.405, spd:0.917, xp:216.091, gold:229.82 },
+      {name:'Athena Grant', lv:107, pwr:180, hp:1208.3, atk:72.984, spd:0.942, xp:241.66, gold:257.014 },
+    ]
+  },
+  {
+    id: 'the_wrath_of_olympus', name: 'The Wrath of Olympus', icon: '⚡',
+    recLv: 115, color: '#4169aa',
+    enemies: [
+      {name:'Stephen Strange', lv:115, pwr:194, hp:1587.992, atk:95.694, spd:0.971, xp:317.598, gold:337.777 },
+      {name:'Sergio Perez', lv:123, pwr:211, hp:2154.009, atk:129.519, spd:1.003, xp:430.802, gold:458.173 },
+      {name:'Gilmore', lv:131, pwr:225, hp:2759.335, atk:165.578, spd:1.029, xp:551.867, gold:586.93 },
+      {name:'Jax', lv:139, pwr:241, hp:3288.583, atk:196.954, spd:1.057, xp:657.717, gold:699.505 },
+      {name:'Dick Grayson', lv:147, pwr:255, hp:4012.319, atk:239.86, spd:1.082, xp:802.464, gold:853.448 },
+      {name:'Schierke', lv:156, pwr:273, hp:5486.416, atk:327.346, spd:1.112, xp:1097.283, gold:1166.999 },
+    ]
+  },
+  {
+    id: 'the_hall_of_justice', name: 'The Hall of Justice', icon: '⭐',
+    recLv: 165, color: '#2040a0',
+    enemies: [
+      {name:'Esteban Ocon', lv:165, pwr:291, hp:7363.732, atk:438.547, spd:1.14, xp:1472.746, gold:1566.317 },
+      {name:'Pierre Gasly', lv:174, pwr:308, hp:8493, atk:504.916, spd:1.167, xp:1698.6, gold:1806.521 },
+      {name:'Hal Jordan', lv:184, pwr:328, hp:11735.373, atk:696.399, spd:1.197, xp:2347.075, gold:2496.196 },
+      {name:'Wanda Maximoff', lv:194, pwr:349, hp:16245, atk:962.324, spd:1.227, xp:3249, gold:3455.425 },
+      {name:'Thor', lv:204, pwr:369, hp:22184.488, atk:1311.994, spd:1.255, xp:4436.898, gold:4718.796 },
+    ]
+  },
+  {
+    id: 'beacon_hills_woods', name: 'The Cluster', icon: '🌐',
+    recLv: 214, color: '#1888a0',
+    enemies: [
+      {name:'Clara Oswald', lv:214, pwr:388, hp:29635.308, atk:1749.863, spd:1.281, xp:5927.062, gold:6303.638 },
+      {name:'Eren Yeager', lv:224, pwr:408, hp:39034.268, atk:2301.348, spd:1.308, xp:7806.854, gold:8302.862 },
+      {name:'Katara', lv:235, pwr:432, hp:45840.791, atk:2698.347, spd:1.338, xp:9168.158, gold:9750.657 },
+      {name:'Caleb Widogast', lv:246, pwr:454, hp:62730.64, atk:3686.926, spd:1.364, xp:12546.128, gold:13343.246 },
+      {name:'Kageyama Tobio', lv:257, pwr:476, hp:86661.856, atk:5086.051, spd:1.392, xp:17332.371, gold:18433.583 },
+      {name:'Shane Hollander', lv:269, pwr:501, hp:122811.05, atk:7196.624, spd:1.421, xp:24562.21, gold:26122.77 },
+      {name:'Kristen Applebees', lv:281, pwr:525, hp:172237.48, atk:10078.289, spd:1.449, xp:34447.496, gold:36636.118 },
+      {name:'Peter Parker', lv:293, pwr:551, hp:198885.469, atk:11621.296, spd:1.479, xp:39777.094, gold:42304.332 },
+    ]
+  },
+  {
+    id: 'southern_air_temple', name: 'Fragrant Court', icon: '🏯',
+    recLv: 305, color: '#e0c060',
+    enemies: [
+      {name:'Turbo-Granny', lv:305, pwr:576, hp:279766.174, atk:16325.367, spd:1.506, xp:55953.235, gold:59508.224 },
+      {name:'Misa Amane', lv:317, pwr:601, hp:391595.073, atk:22821.443, spd:1.533, xp:78319.015, gold:83295.013 },
+      {name:'Iida Tenya', lv:330, pwr:628, hp:555903.775, atk:32353.353, spd:1.56, xp:111180.755, gold:118244.624 },
+      {name:'Patrick Stump', lv:343, pwr:656, hp:749683.314, atk:43574.612, spd:1.59, xp:149936.663, gold:159462.889 },
+      {name:'Gertrude Robinson', lv:356, pwr:683, hp:938569.636, atk:54485.122, spd:1.617, xp:187713.927, gold:199640.332 },
+      {name:'Sasha Blaus', lv:370, pwr:714, hp:1404401.559, atk:81421.382, spd:1.647, xp:280880.312, gold:298726.042 },
+      {name:'Daichi Sawamura', lv:384, pwr:743, hp:2037679.679, atk:117988.222, spd:1.675, xp:407535.936, gold:433428.732 },
+      {name:'Koichi Hirose', lv:398, pwr:775, hp:2999435.692, atk:173466.845, spd:1.704, xp:599887.138, gold:638000.968 },
+    ]
+  },
+  {
+    id: 'hero_academia_arena', name: 'Morioh Never Sleeps', icon: '🌟',
+    recLv: 412, color: '#c040c0',
+    enemies: [
+      {name:'Martin Blackwood', lv:412, pwr:804, hp:3536048.857, atk:204262.103, spd:1.732, xp:707209.771, gold:752142.344 },
+      {name:'Hisoka Morow', lv:426, pwr:834, hp:5101027, atk:294330.206, spd:1.758, xp:1020205.4, gold:1085024.15 },
+      {name:'Fjord Stone', lv:441, pwr:867, hp:7625075.557, atk:439452.419, spd:1.787, xp:1525015.111, gold:1621906.946 },
+      {name:'Jonathan Sims', lv:456, pwr:900, hp:11234590.691, atk:646743.994, spd:1.815, xp:2246918.138, gold:2389676.082 },
+      {name:'Gangle', lv:471, pwr:933, hp:13580009, atk:780902.694, spd:1.843, xp:2716001.8, gold:2888562.974 },
+      {name:'Husk', lv:487, pwr:969, hp:20767554.521, atk:1192858.866, spd:1.872, xp:4153510.904, gold:4417404.22 },
+      {name:'Rin Itoshi', lv:503, pwr:1005, hp:31806094.883, atk:1824884.977, spd:1.902, xp:6361218.977, gold:6765379.024 },
+    ]
+  },
+  {
+    id: 'the_eye_opens', name: 'The Eye Opens', icon: '👁️',
+    recLv: 519, color: '#3a3a3a',
+    enemies: [
+      {name:'Angel Dust', lv:519, pwr:1040, hp:47493031.201, atk:2722022.345, spd:1.93, xp:9498606.24, gold:10102100.188 },
+      {name:'Gon Freecss', lv:535, pwr:1076, hp:58929733.774, atk:3374007.556, spd:1.957, xp:11785946.755, gold:12534766.882 },
+      {name:'Percy de Rolo', lv:551, pwr:1111, hp:86154071.434, atk:4927769.187, spd:1.984, xp:17230814.287, gold:18325574.073 },
+      {name:'Mikey Way', lv:568, pwr:1149, hp:131594072, atk:7518982.039, spd:2.013, xp:26318814.4, gold:27990980.273 },
+      {name:'Kakashi Hatake', lv:585, pwr:1188, hp:204008155.047, atk:11644797.555, spd:2.042, xp:40801631.009, gold:43393962.636 },
+      {name:'Chopper', lv:602, pwr:1226, hp:260667949.332, atk:14864346.661, spd:2.07, xp:52133589.866, gold:55445897.499 },
+      {name:'Toph Beifong', lv:620, pwr:1266, hp:388311977.062, atk:22120765.969, spd:2.098, xp:77662395.412, gold:82596675.705 },
+    ]
+  },
+  {
+    id: 'the_batcave', name: 'The Batcave', icon: '🦇',
+    recLv: 638, color: '#1a1a2a',
+    enemies: [
+      {name:'Jotaro Kujo', lv:638, pwr:1307, hp:604414208.473, atk:34397495.089, spd:2.126, xp:120882841.695, gold:128563133.042 },
+      {name:'Keyleth', lv:656, pwr:1349, hp:941998418.869, atk:53558354.12, spd:2.155, xp:188399683.774, gold:200369657.682 },
+      {name:'Steve Rogers', lv:674, pwr:1390, hp:1185109869, atk:67317956.493, spd:2.183, xp:237021973.8, gold:252081164.905 },
+      {name:'Shanks', lv:692, pwr:1430, hp:1806448283.396, atk:102518911.373, spd:2.21, xp:361289656.679, gold:384244195.016 },
+      {name:'Hinata Shoyo', lv:711, pwr:1475, hp:2897236403.433, atk:164269376.369, spd:2.239, xp:579447280.687, gold:616262463.665 },
+      {name:'Millie', lv:730, pwr:1519, hp:4538267865.285, atk:257079808.233, spd:2.268, xp:907653573.057, gold:965321342.821 },
+      {name:'Lito Rodriguez', lv:749, pwr:1563, hp:5724195250.303, atk:323971512.363, spd:2.296, xp:1144839050.061, gold:1217576399.106 },
+    ]
+  },
+  {
+    id: 'morioh_town', name: 'The Sun Tree\'s Shadow', icon: '🐴',
+    recLv: 769, color: '#a07030',
+    enemies: [
+      {name:'Olivier Armstrong', lv:769, pwr:1609, hp:9195313585.889, atk:519952045.773, spd:2.324, xp:1839062717.178, gold:1955907566.914 },
+      {name:'Momo Ayase', lv:789, pwr:1655, hp:14522355621, atk:820442121.083, spd:2.353, xp:2904471124.2, gold:3089006697.076 },
+      {name:'The Eleventh Doctor', lv:809, pwr:1702, hp:23495613502.991, atk:1326237959.951, spd:2.382, xp:4699122700.598, gold:4997681461.381 },
+      {name:'Isidro', lv:829, pwr:1749, hp:29848647672.857, atk:1683417669.717, spd:2.41, xp:5969729534.571, gold:6349016300.55 },
+      {name:'Ryland Grace', lv:849, pwr:1797, hp:48411408190.932, atk:2728072239.843, spd:2.438, xp:9682281638.186, gold:10297445402.069 },
+      {name:'Tim Drake', lv:870, pwr:1844, hp:76819122095.841, atk:4325229023.573, spd:2.465, xp:15363824419.168, gold:16339965003.64 },
+      {name:'Yuji Itadori', lv:891, pwr:1894, hp:117548190321.648, atk:6612958601.936, spd:2.494, xp:23509638064.33, gold:25003322918.747 },
+    ]
+  },
+  {
+    id: 'theatre_des_vampires', name: 'At the Raven\'s Door', icon: '🔔',
+    recLv: 912, color: '#8a5cf6',
+    enemies: [
+      {name:'Yor Forger', lv:912, pwr:1945, hp:162787191604.78, atk:9150572309.194, spd:2.523, xp:32557438320.956, gold:34625975164.678 },
+      {name:'Hannibal Lecter', lv:934, pwr:1997, hp:270494747727.984, atk:15192404299.363, spd:2.551, xp:54098949545.597, gold:57536126304.976 },
+      {name:'Louis de Pointe du Lac', lv:956, pwr:2049, hp:443084967369.906, atk:24865809522.752, spd:2.58, xp:88616993473.981, gold:94247274154.351 },
+      {name:'Piccolo', lv:978, pwr:2101, hp:578425754164.001, atk:32435360764.171, spd:2.608, xp:115685150832.8, gold:123035206890.962 },
+      {name:'Isabella', lv:1000, pwr:2154, hp:947869276935.181, atk:53110775203.696, spd:2.636, xp:189573855387.036, gold:201618430289.052 },
+      {name:'Dorian Storm', lv:1022, pwr:2207, hp:1555043232785.993, atk:87065632773.312, spd:2.664, xp:311008646557.199, gold:330768580916.21 },
+      {name:'Bachira Meguru', lv:1045, pwr:2263, hp:2218475724827.339, atk:124114159785.87, spd:2.692, xp:443695144965.468, gold:471885316000.849 },
+    ]
+  },
+  {
+    id: 'gallifrey_signal', name: 'The Gate of Truth', icon: '⚙️',
+    recLv: 1068, color: '#8090a0',
+    enemies: [
+      {name:'Odysseus', lv:1068, pwr:2317, hp:3535452670203.536, atk:197642875266.073, spd:2.72, xp:707090534040.707, gold:752015531120.984 },
+      {name:'Zuko', lv:1091, pwr:2373, hp:5912259829773.195, atk:330267426555.752, spd:2.749, xp:1182451965954.639, gold:1257579051611.567 },
+      {name:'Mei Nianqing', lv:1115, pwr:2432, hp:8652975724838.519, atk:482999790057.464, spd:2.778, xp:1730595144967.704, gold:1840548507503.227 },
+      {name:'Sakura Haruno', lv:1139, pwr:2490, hp:13895582796561.707, atk:775057855581.925, spd:2.806, xp:2779116559312.342, gold:2955687729908.251 },
+      {name:'FCG', lv:1163, pwr:2548, hp:23456770119429.918, atk:1307398182356.751, spd:2.834, xp:4691354023885.983, gold:4989419201793.58 },
+      {name:'Charles Leclerc', lv:1187, pwr:2607, hp:34212212088582.703, atk:1905502931040.787, spd:2.863, xp:6842442417716.541, gold:7277176996726.161 },
+      {name:'Kohaku', lv:1211, pwr:2665, hp:54279354923621.62, atk:3021049836277.306, spd:2.891, xp:10855870984724.324, gold:11545598747738.783 },
+    ]
+  },
+  {
+    id: 'the_principality', name: 'The Principality', icon: '🏎️',
+    recLv: 1236, color: '#e01020',
+    enemies: [
+      {name:'Oscar Piastri', lv:1236, pwr:2726, hp:93342164673471.23, atk:5191454770025.469, spd:2.919, xp:18668432934694.246, gold:19854531821200.047 },
+      {name:'Donna Noble', lv:1261, pwr:2788, hp:136640224088734.83, atk:7594234932360.389, spd:2.948, xp:27328044817746.97, gold:29064332145242.52 },
+      {name:'Max Verstappen', lv:1286, pwr:2849, hp:221599192835013.1, atk:12307606050420.559, spd:2.976, xp:44319838567002.625, gold:47135699510357.13 },
+      {name:'Mycroft Holmes', lv:1312, pwr:2912, hp:384320703378435.5, atk:21330104117236.23, spd:3.005, xp:76864140675687.11, gold:81747703853516.88 },
+      {name:'Crowley', lv:1338, pwr:2977, hp:555378350398512.44, atk:30802630214136.344, spd:3.033, xp:111075670079702.5, gold:118132862778216.39 },
+      {name:'Kaminari Denki', lv:1364, pwr:3042, hp:950719999999997.2, atk:52693455300128.33, spd:3.062, xp:190143999999999.47, gold:202224799039999.44 },
+      {name:'Zatanna', lv:1390, pwr:3107, hp:1.654441e15, atk:91635957023992.52, spd:3.09, xp:330888146413315.06, gold:351911124795685.06 },
+    ]
+  },
+  {
+    id: 'station_118', name: 'Station 118', icon: '🚒',
+    recLv: 1416, color: '#c03020',
+    enemies: [
+      {name:'Stolas', lv:1416, pwr:3170, hp:2.311580e15, atk:127949754679498.42, spd:3.118, xp:462316038938524, gold:491689288472483.1 },
+      {name:'Alphonse Elric', lv:1443, pwr:3237, hp:4.045126e15, atk:223754961100214.25, spd:3.146, xp:809025184468809.9, gold:860426599564035.6 },
+      {name:'Hyoga', lv:1470, pwr:3305, hp:7.074240e15, atk:391053176247810.06, spd:3.174, xp:1.414848e15, gold:1.504740e15 },
+      {name:'Tony Stark', lv:1497, pwr:3373, hp:1.012793e16, atk:559496294701752.8, spd:3.203, xp:2.025587e15, gold:2.154283e15 },
+      {name:'Hua Cheng', lv:1525, pwr:3442, hp:1.796577e16, atk:991829990476490.4, spd:3.232, xp:3.593154e15, gold:3.821446e15 },
+      {name:'Guts', lv:1553, pwr:3513, hp:3.212561e16, atk:1.772405e15, spd:3.26, xp:6.425122e15, gold:6.833343e15 },
+      {name:'Percy Jackson', lv:1581, pwr:3583, hp:4.628404e16, atk:2.551923e15, spd:3.288, xp:9.256809e15, gold:9.844940e15 },
+    ]
+  },
+  {
+    id: 'the_helicarrier', name: 'The Helicarrier', icon: '🛡️',
+    recLv: 1609, color: '#c02020',
+    enemies: [
+      {name:'Connie Springer', lv:1609, pwr:3655, hp:8.245014e16, atk:4.543151e15, spd:3.317, xp:1.649003e16, gold:1.753772e16 },
+      {name:'Seiko Ayase', lv:1637, pwr:3725, hp:1.239577e17, atk:6.826113e15, spd:3.345, xp:2.479154e16, gold:2.636667e16 },
+      {name:'Sokka', lv:1666, pwr:3798, hp:2.196036e17, atk:1.208561e16, spd:3.373, xp:4.392072e16, gold:4.671122e16 },
+      {name:'Jester Lavorre', lv:1695, pwr:3872, hp:3.795994e17, atk:2.087797e16, spd:3.401, xp:7.591989e16, gold:8.074346e16 },
+      {name:'Valtteri Bottas', lv:1724, pwr:3946, hp:5.993593e17, atk:3.294488e16, spd:3.43, xp:1.198719e17, gold:1.274879e17 },
+      {name:'Alana Bloom', lv:1754, pwr:4022, hp:1.089539e18, atk:5.985176e16, spd:3.458, xp:2.179078e17, gold:2.317526e17 },
+      {name:'Dabi', lv:1784, pwr:4099, hp:1.684002e18, atk:9.245163e16, spd:3.487, xp:3.368005e17, gold:3.581991e17 },
+    ]
+  },
+  {
+    id: 'mount_tonglu', name: 'Mount Tonglu', icon: '🏮',
+    recLv: 1814, color: '#a02020',
+    enemies: [
+      {name:'Wolfgang Bogdanow', lv:1814, pwr:4174, hp:3.030940e18, atk:1.662996e17, spd:3.516, xp:6.061881e17, gold:6.447022e17 },
+      {name:'Andy Hurley', lv:1844, pwr:4253, hp:5.569090e18, atk:3.053825e17, spd:3.544, xp:1.113818e18, gold:1.184584e18 },
+      {name:'Vegeta', lv:1874, pwr:4330, hp:9.285763e18, atk:5.088943e17, spd:3.572, xp:1.857153e18, gold:1.975147e18 },
+      {name:'Gojo Satoru', lv:1905, pwr:4409, hp:1.405075e19, atk:7.695827e17, spd:3.6, xp:2.810151e18, gold:2.988694e18 },
+      {name:'Lando Norris', lv:1936, pwr:4490, hp:2.589717e19, atk:1.417613e18, spd:3.629, xp:5.179435e18, gold:5.508510e18 },
+      {name:'Nami', lv:1967, pwr:4579, hp:4.503249e19, atk:2.463692e18, spd:3.659, xp:9.006497e18, gold:9.578725e18 },
+      {name:'Aang', lv:1999, pwr:4674, hp:7.900533e19, atk:4.319811e18, spd:3.69, xp:1.580107e19, gold:1.680499e19 },
+    ]
+  },
+  {
+    id: 'yorknew_auction', name: 'Malevolent Shrine', icon: '👹',
+    recLv: 2031, color: '#6030a0',
+    enemies: [
+      {name:'Scott McCall', lv:2031, pwr:4771, hp:1.386076e20, atk:7.574426e18, spd:3.72, xp:2.772152e19, gold:2.948280e19 },
+      {name:'Bokuto Koutarou', lv:2063, pwr:4870, hp:2.431741e20, atk:1.328118e19, spd:3.751, xp:4.863482e19, gold:5.172484e19 },
+      {name:'Gaoshun', lv:2095, pwr:4971, hp:4.266265e20, atk:2.328774e19, spd:3.783, xp:8.532530e19, gold:9.074644e19 },
+      {name:'Itachi Uchiha', lv:2127, pwr:5074, hp:7.484767e20, atk:4.083410e19, spd:3.814, xp:1.496953e20, gold:1.592062e20 },
+      {name:'Bond Forger', lv:2160, pwr:5184, hp:1.336404e21, atk:7.286877e19, spd:3.845, xp:2.672809e20, gold:2.842626e20 },
+      {name:'Sukuna', lv:2193, pwr:5292, hp:2.419489e21, atk:1.318469e20, spd:3.876, xp:4.838978e20, gold:5.146422e20 },
+    ]
+  },
+  {
+    id: 'kingdom_of_valencia', name: 'The Enchanted Forest', icon: '👸',
+    recLv: 2226, color: '#e070a0',
+    enemies: [
+      {name:'Toshiro Hitsugaya', lv:2226, pwr:5403, hp:4.391223e21, atk:2.391503e20, spd:3.908, xp:8.782447e20, gold:9.340439e20 },
+      {name:'Senku Ishigami', lv:2260, pwr:5519, hp:8.115059e21, atk:4.416808e20, spd:3.94, xp:1.623012e21, gold:1.726130e21 },
+      {name:'Kala Dandekar', lv:2294, pwr:5638, hp:1.499677e22, atk:8.157292e20, spd:3.972, xp:2.999355e21, gold:3.189919e21 },
+      {name:'Yoshikage Kira', lv:2328, pwr:5760, hp:2.771431e22, atk:1.506550e21, spd:4.004, xp:5.542861e21, gold:5.895027e21 },
+      {name:'Tim Stoker', lv:2362, pwr:5884, hp:5.121654e22, atk:2.782409e21, spd:4.036, xp:1.024331e22, gold:1.089412e22 },
+      {name:'Jonah Magnus', lv:2396, pwr:6011, hp:9.464907e22, atk:5.138762e21, spd:4.068, xp:1.892981e22, gold:2.013252e22 },
+    ]
+  },
+  {
+    id: 'apothecary_palace', name: 'Marquesian Court', icon: '👑',
+    recLv: 2431, color: '#6a4ca0',
+    enemies: [
+      {name:'Sasuke Uchiha', lv:2431, pwr:6144, hp:1.781012e23, atk:9.663455e21, spd:4.101, xp:3.562024e22, gold:3.788337e22 },
+      {name:'Madara Uchiha', lv:2466, pwr:6281, hp:3.351331e23, atk:1.817215e22, spd:4.134, xp:6.702662e22, gold:7.128515e22 },
+      {name:'Castiel', lv:2501, pwr:6420, hp:6.306200e23, atk:3.417277e22, spd:4.167, xp:1.261240e23, gold:1.341373e23 },
+      {name:'Pike Trickfoot', lv:2537, pwr:6567, hp:1.208266e24, atk:6.543205e22, spd:4.201, xp:2.416532e23, gold:2.570066e23 },
+      {name:'Naruto Uzumaki', lv:2573, pwr:6717, hp:2.315034e24, atk:1.252855e23, spd:4.235, xp:4.630067e23, gold:4.924239e23 },
+      {name:'Moxxie', lv:2609, pwr:6870, hp:4.435597e24, atk:2.398894e23, spd:4.269, xp:8.871194e23, gold:9.434825e23 },
+    ]
+  },
+  {
+    id: 'the_watchtower', name: 'The Watchtower', icon: '🛰️',
+    recLv: 2645, color: '#3050b0',
+    enemies: [
+      {name:'Casca', lv:2645, pwr:7027, hp:8.498589e24, atk:4.593264e23, spd:4.303, xp:1.699718e24, gold:1.807709e24 },
+      {name:'Vax\'ildan', lv:2681, pwr:7187, hp:1.628327e25, atk:8.794916e23, spd:4.337, xp:3.256654e24, gold:3.463565e24 },
+      {name:'Killua Zoldyck', lv:2718, pwr:7356, hp:3.176733e25, atk:1.714662e24, spd:4.372, xp:6.353466e24, gold:6.757133e24 },
+      {name:'Leorio Paradinight', lv:2755, pwr:7529, hp:6.197546e25, atk:3.342913e24, spd:4.407, xp:1.239509e25, gold:1.318261e25 },
+      {name:'Ilya Rozanov', lv:2792, pwr:7706, hp:1.209091e26, atk:6.517361e24, spd:4.442, xp:2.418181e25, gold:2.571820e25 },
+      {name:'Zeno-sama', lv:2830, pwr:7891, hp:2.401830e26, atk:1.293764e25, spd:4.477, xp:4.803659e25, gold:5.108860e25 },
+    ]
+  },
+  {
+    id: 'shiganshina_ruins', name: 'Roadhouse Reunion', icon: '⛩️',
+    recLv: 2868, color: '#9060c0',
+    enemies: [
+      {name:'Gareth', lv:2868, pwr:8082, hp:4.771177e26, atk:2.568254e25, spd:4.5, xp:9.542354e25, gold:1.014863e26 },
+      {name:'All Might', lv:2906, pwr:8277, hp:9.477830e26, atk:5.098249e25, spd:4.5, xp:1.895566e26, gold:2.016001e26 },
+      {name:'Lance Stroll', lv:2944, pwr:8476, hp:1.882748e27, atk:1.012055e26, spd:4.5, xp:3.765497e26, gold:4.004738e26 },
+      {name:'Bakugo Katsuki', lv:2982, pwr:8681, hp:3.740035e27, atk:2.009034e26, spd:4.5, xp:7.480070e26, gold:7.955316e26 },
+      {name:'King Bradley', lv:3021, pwr:8896, hp:7.564902e27, atk:4.060755e26, spd:4.5, xp:1.512980e27, gold:1.609108e27 },
+      {name:'Isagi Yoichi', lv:3060, pwr:9116, hp:1.530139e28, atk:8.207790e26, spd:4.5, xp:3.060279e27, gold:3.254713e27 },
+    ]
+  },
+  {
+    id: 'karasuno_gymnasium', name: 'Thousand-Year Blood War', icon: '❄️',
+    recLv: 3099, color: '#4090d0',
+    enemies: [
+      {name:'Fig Faeth', lv:3099, pwr:9342, hp:3.094986e28, atk:1.658998e27, spd:4.5, xp:6.189971e27, gold:6.583251e27 },
+      {name:'Ichigo Kurosaki', lv:3139, pwr:9579, hp:6.374272e28, atk:3.414300e27, spd:4.5, xp:1.274854e28, gold:1.355852e28 },
+      {name:'Logan Sargeant', lv:3179, pwr:9823, hp:1.312812e29, atk:7.026799e27, spd:4.5, xp:2.625624e28, gold:2.792443e28 },
+      {name:'Riley Blue', lv:3219, pwr:10072, hp:2.703800e29, atk:1.446150e28, spd:4.5, xp:5.407600e28, gold:5.751172e28 },
+      {name:'Kevin Magnussen', lv:3259, pwr:10328, hp:5.568606e29, atk:2.976249e28, spd:4.5, xp:1.113721e29, gold:1.184482e29 },
+      {name:'Renji Abarai', lv:3299, pwr:10590, hp:1.146881e30, atk:6.125269e28, spd:4.5, xp:2.293763e29, gold:2.439497e29 },
+    ]
+  },
+  {
+    id: 'raccoon_city_in_flames', name: 'Raccoon City in Flames', icon: '🧟',
+    recLv: 3340, color: '#4a5a2a',
+    enemies: [
+      {name:'Harley Quinn', lv:3340, pwr:10866, hp:2.405109e30, atk:1.283564e29, spd:4.5, xp:4.810218e29, gold:5.115835e29 },
+      {name:'Rock Lee', lv:3381, pwr:11149, hp:5.043720e30, atk:2.689737e29, spd:4.5, xp:1.008744e30, gold:1.072835e30 },
+      {name:'Charlie Bradbury', lv:3422, pwr:11440, hp:1.057712e31, atk:5.636403e29, spd:4.5, xp:2.115423e30, gold:2.249827e30 },
+      {name:'Jackson Whittemore', lv:3464, pwr:11745, hp:2.258540e31, atk:1.202626e30, spd:4.5, xp:4.517080e30, gold:4.804073e30 },
+      {name:'Zhou Guanyu', lv:3506, pwr:12059, hp:4.822679e31, atk:2.566016e30, spd:4.5, xp:9.645359e30, gold:1.025818e31 },
+      {name:'L Lawliet', lv:3548, pwr:12381, hp:1.029791e32, atk:5.475050e30, spd:4.5, xp:2.059581e31, gold:2.190437e31 },
+    ]
+  },
+  {
+    id: 'the_neins_wagon', name: 'U.A. Sports Festival', icon: '💥',
+    recLv: 3590, color: '#e05020',
+    enemies: [
+      {name:'Jean Kirstein', lv:3590, pwr:12711, hp:2.198920e32, atk:1.168199e31, spd:4.5, xp:4.397841e31, gold:4.677258e31 },
+      {name:'Beauregard Lionett', lv:3632, pwr:13050, hp:4.695373e32, atk:2.492559e31, spd:4.5, xp:9.390745e31, gold:9.987386e31 },
+      {name:'Mikasa Ackerman', lv:3675, pwr:13407, hp:1.020881e33, atk:5.415150e31, spd:4.5, xp:2.041761e32, gold:2.171484e32 },
+      {name:'Stiles Stilinski', lv:3718, pwr:13774, hp:2.219626e33, atk:1.176456e32, spd:4.5, xp:4.439252e32, gold:4.721300e32 },
+      {name:'Clark Kent', lv:3761, pwr:14150, hp:4.825970e33, atk:2.555881e32, spd:4.5, xp:9.651941e32, gold:1.026518e33 },
+      {name:'Bobby Nash', lv:3805, pwr:14546, hp:1.068400e34, atk:5.653822e32, spd:4.5, xp:2.136800e33, gold:2.272561e33 },
+    ]
+  },
+  {
+    id: 'the_french_quarter', name: 'New Orleans by Night', icon: '🩸',
+    recLv: 3849, color: '#8a2050',
+    enemies: [
+      {name:'Shi Qingxuan', lv:3849, pwr:14953, hp:2.365282e34, atk:1.250673e33, spd:4.5, xp:4.730565e33, gold:5.031121e33 },
+      {name:'Hawks', lv:3893, pwr:15372, hp:5.236392e34, atk:2.766592e33, spd:4.5, xp:1.047278e34, gold:1.113817e34 },
+      {name:'Chris Redfield', lv:3937, pwr:15802, hp:1.159261e35, atk:6.119932e33, spd:4.5, xp:2.318522e34, gold:2.465830e34 },
+      {name:'Zeus', lv:3981, pwr:16244, hp:2.566436e35, atk:1.353780e34, spd:4.5, xp:5.132872e34, gold:5.458989e34 },
+      {name:'Imogen Temult', lv:4026, pwr:16709, hp:5.785274e35, atk:3.049200e34, spd:4.5, xp:1.157055e35, gold:1.230568e35 },
+    ]
+  },
+  {
+    id: 'the_golden_age_battlefield', name: 'Fate of Exandria', icon: '🏕️',
+    recLv: 4071, color: '#c89020',
+    enemies: [
+      {name:'Gorgug Thistlespring', lv:4071, pwr:17188, hp:1.304119e36, atk:6.867897e34, spd:4.5, xp:2.608239e35, gold:2.773953e35 },
+      {name:'Carlos Sainz', lv:4116, pwr:17680, hp:2.939753e36, atk:1.546898e35, spd:4.5, xp:5.879506e35, gold:6.253060e35 },
+      {name:'Grover Underwood', lv:4162, pwr:18197, hp:6.747589e36, atk:3.547611e35, spd:4.5, xp:1.349518e36, gold:1.435259e36 },
+      {name:'Barou Shoei', lv:4208, pwr:18730, hp:1.548768e37, atk:8.135986e35, spd:4.5, xp:3.097536e36, gold:3.294338e36 },
+      {name:'Laudna', lv:4254, pwr:19278, hp:3.554873e37, atk:1.865883e36, spd:4.5, xp:7.109746e36, gold:7.561464e36 },
+    ]
+  },
+  {
+    id: 'immediate_murder_professionals', name: 'Immediate Murder Professionals', icon: '💥',
+    recLv: 4300, color: '#701090',
+    enemies: [
+      {name:'Capheus Otieno', lv:4300, pwr:19842, hp:8.159469e37, atk:4.279162e36, spd:4.5, xp:1.631894e37, gold:1.735576e37 },
+      {name:'Loona', lv:4346, pwr:20423, hp:1.872836e38, atk:9.813706e36, spd:4.5, xp:3.745671e37, gold:3.983652e37 },
+      {name:'Leon Kennedy', lv:4393, pwr:21034, hp:4.377052e38, atk:2.291626e37, spd:4.5, xp:8.754104e37, gold:9.310296e37 },
+      {name:'Ashton Greymoore', lv:4440, pwr:21664, hp:1.022972e39, atk:5.351239e37, spd:4.5, xp:2.045944e38, gold:2.175933e38 },
+      {name:'The Twelfth Doctor', lv:4487, pwr:22312, hp:2.390814e39, atk:1.249583e38, spd:4.5, xp:4.781628e38, gold:5.085429e38 },
+    ]
+  },
+  {
+    id: 'the_black_parade_marches', name: 'The Black Parade Marches', icon: '🎤',
+    recLv: 4535, color: '#1a1a1a',
+    enemies: [
+      {name:'Gerard Way', lv:4535, pwr:22994, hp:5.689475e39, atk:2.971065e38, spd:4.5, xp:1.137895e39, gold:1.210191e39 },
+      {name:'Nan Feng', lv:4583, pwr:23697, hp:1.353937e40, atk:7.064138e38, spd:4.5, xp:2.707874e39, gold:2.879919e39 },
+      {name:'Izuku Midoriya', lv:4631, pwr:24421, hp:3.221995e40, atk:1.679601e39, spd:4.5, xp:6.443990e39, gold:6.853409e39 },
+      {name:'Kinger', lv:4679, pwr:25167, hp:7.667455e40, atk:3.993496e39, spd:4.5, xp:1.533491e40, gold:1.630921e40 },
+      {name:'Shoto Todoroki', lv:4727, pwr:25937, hp:1.824642e41, atk:9.495118e39, spd:4.5, xp:3.649283e40, gold:3.881141e40 },
+      {name:'Roronoa Zoro', lv:4776, pwr:26746, hp:4.421282e41, atk:2.298708e40, spd:4.5, xp:8.842565e40, gold:9.404377e40 },
+      {name:'Josuke Higashikata', lv:4825, pwr:27581, hp:1.071319e42, atk:5.565027e40, spd:4.5, xp:2.142639e41, gold:2.278771e41 },
+      {name:'Nomi Marks', lv:4874, pwr:28442, hp:2.595910e42, atk:1.347258e41, spd:4.5, xp:5.191819e41, gold:5.521681e41 },
+    ]
+  },
+  {
+    id: 'cursed_roadside_shrine', name: 'The Memory Palace', icon: '🔪',
+    recLv: 4924, color: '#4a3860',
+    enemies: [
+      {name:'Frank Iero', lv:4924, pwr:29348, hp:6.404785e42, atk:3.321013e41, spd:4.5, xp:1.280957e42, gold:1.362343e42 },
+      {name:'Monkey D. Luffy (Gear 5)', lv:4974, pwr:30283, hp:1.580227e43, atk:8.186353e41, spd:4.5, xp:3.160454e42, gold:3.361253e42 },
+      {name:'Sanji', lv:5024, pwr:31248, hp:3.898831e43, atk:2.017950e42, spd:4.5, xp:7.797662e42, gold:8.293087e42 },
+      {name:'Armin Arlert', lv:5074, pwr:32243, hp:9.619431e43, atk:4.974279e42, spd:4.5, xp:1.923886e43, gold:2.046120e43 },
+      {name:'Jason Todd', lv:5124, pwr:33270, hp:2.373364e44, atk:1.226168e43, spd:4.5, xp:4.746728e43, gold:5.048311e43 },
+    ]
+  },
+  {
+    id: 'konoha_outskirts', name: 'The Rumbling Begins', icon: '🧱',
+    recLv: 5175, color: '#a05040',
+    enemies: [
+      {name:'Jill Valentine', lv:5175, pwr:34352, hp:5.962434e44, atk:3.077558e43, spd:4.5, xp:1.192487e44, gold:1.268252e44 },
+      {name:'Bedelia du Maurier', lv:5226, pwr:35469, hp:1.497900e45, atk:7.724361e43, spd:4.5, xp:2.995800e44, gold:3.186138e44 },
+      {name:'Ryuk', lv:5277, pwr:36622, hp:3.763068e45, atk:1.938737e44, spd:4.5, xp:7.526137e44, gold:8.004310e44 },
+      {name:'Megumi Fushiguro', lv:5329, pwr:37836, hp:9.625996e45, atk:4.954633e44, spd:4.5, xp:1.925199e45, gold:2.047517e45 },
+      {name:'Galavant', lv:5381, pwr:39090, hp:2.462347e46, atk:1.266205e45, spd:4.5, xp:4.924694e45, gold:5.237584e45 },
+    ]
+  },
+  {
+    id: 'half_blood_hill', name: 'Half-Blood Hill', icon: '🔱',
+    recLv: 5433, color: '#2070a0',
+    enemies: [
+      {name:'Evan Buckley', lv:5433, pwr:40386, hp:6.298727e46, atk:3.235912e45, spd:4.5, xp:1.259745e46, gold:1.339783e46 },
+      {name:'Kaido', lv:5485, pwr:41725, hp:1.611226e47, atk:8.269693e45, spd:4.5, xp:3.222451e46, gold:3.427189e46 },
+      {name:'Giorno (Gold Experience Requiem)', lv:5537, pwr:43109, hp:4.121543e47, atk:2.113402e46, spd:4.5, xp:8.243087e46, gold:8.766811e46 },
+      {name:'Polites', lv:5590, pwr:44566, hp:1.073514e48, atk:5.499347e46, spd:4.5, xp:2.147028e47, gold:2.283440e47 },
+    ]
+  },
+  {
+    id: 'center_ice', name: 'Center Ice', icon: '🏒',
+    recLv: 5643, color: '#1050a0',
+    enemies: [
+      {name:'Xie Lian', lv:5643, pwr:46072, hp:2.796119e48, atk:1.431002e47, spd:4.5, xp:5.592237e47, gold:5.947540e47 },
+      {name:'Barry Allen', lv:5696, pwr:47630, hp:7.282885e48, atk:3.723653e47, spd:4.5, xp:1.456577e48, gold:1.549121e48 },
+      {name:'Beerus', lv:5750, pwr:49270, hp:1.931504e49, atk:9.865854e47, spd:4.5, xp:3.863008e48, gold:4.108444e48 },
+      {name:'Rukia Kuchiki', lv:5804, pwr:50968, hp:5.122568e49, atk:2.613967e48, spd:4.5, xp:1.024514e49, gold:1.089606e49 },
+      {name:'Oliver Queen', lv:5858, pwr:52724, hp:1.358563e50, atk:6.925730e48, spd:4.5, xp:2.717127e49, gold:2.889759e49 },
+    ]
+  },
+  {
+    id: 'ad_astra', name: 'Ad Astra', icon: '🚀',
+    recLv: 5912, color: '#202850',
+    enemies: [
+      {name:'Fernando Alonso', lv:5912, pwr:54540, hp:3.603065e50, atk:1.834979e49, spd:4.5, xp:7.206129e49, gold:7.663971e49 },
+      {name:'Nobara Kugisaki', lv:5966, pwr:56419, hp:9.555737e50, atk:4.861793e49, spd:4.5, xp:1.911147e50, gold:2.032572e50 },
+      {name:'Sid', lv:6021, pwr:58399, hp:2.580481e51, atk:1.311591e50, spd:4.5, xp:5.160962e50, gold:5.488864e50 },
+      {name:'Joe Trohman', lv:6076, pwr:60449, hp:6.968465e51, atk:3.538345e50, spd:4.5, xp:1.393693e51, gold:1.482241e51 },
+      {name:'Dean Winchester', lv:6131, pwr:62571, hp:1.881800e52, atk:9.545573e50, spd:4.5, xp:3.763601e51, gold:4.002721e51 },
+    ]
+  },
+  {
+    id: 'kame_house', name: 'The Golden Age Battlefield', icon: '⚔️',
+    recLv: 6187, color: '#701010',
+    enemies: [
+      {name:'Circe', lv:6187, pwr:64808, hp:5.174332e52, atk:2.622046e51, spd:4.5, xp:1.034866e52, gold:1.100617e52 },
+      {name:'Allison Argent', lv:6243, pwr:67125, hp:1.422771e53, atk:7.202421e51, spd:4.5, xp:2.845542e52, gold:3.026334e52 },
+      {name:'Light Yagami', lv:6299, pwr:69525, hp:3.912153e53, atk:1.978412e52, spd:4.5, xp:7.824306e52, gold:8.321423e52 },
+      {name:'Giorno Giovanna', lv:6355, pwr:72010, hp:1.075713e54, atk:5.434442e52, spd:4.5, xp:2.151427e53, gold:2.288118e53 },
+      {name:'Tsukishima Kei', lv:6411, pwr:74584, hp:2.957858e54, atk:1.492771e53, spd:4.5, xp:5.915716e53, gold:6.291571e53 },
+    ]
+  },
+  {
+    id: 'happy_hotel_hell_awaits', name: 'Happy Hotel, Hell Awaits', icon: '😈',
+    recLv: 6468, color: '#c02040',
+    enemies: [
+      {name:'Irene Adler', lv:6468, pwr:77299, hp:8.281373e54, atk:4.175109e53, spd:4.5, xp:1.656275e54, gold:1.761506e54 },
+      {name:'Orym of the Air Ashari', lv:6525, pwr:80113, hp:2.318608e55, atk:1.167730e54, spd:4.5, xp:4.637217e54, gold:4.931842e54 },
+      {name:'Portgas D. Ace', lv:6582, pwr:83029, hp:6.491611e55, atk:3.266007e54, spd:4.5, xp:1.298322e55, gold:1.380811e55 },
+      {name:'Levi Ackerman', lv:6640, pwr:86105, hp:1.850639e56, atk:9.300968e54, spd:4.5, xp:3.701279e55, gold:3.936440e55 },
+      {name:'Alex Albon', lv:6698, pwr:89295, hp:5.275834e56, atk:2.648739e55, spd:4.5, xp:1.055167e56, gold:1.122207e56 },
+    ]
+  },
+  {
+    id: 'wammys_house', name: 'Bad Wolf Bay', icon: '📡',
+    recLv: 6756, color: '#2050a0',
+    enemies: [
+      {name:'Diana Prince', lv:6756, pwr:92604, hp:1.504044e57, atk:7.543106e55, spd:4.5, xp:3.008088e56, gold:3.199207e56 },
+      {name:'Frederick Chilton', lv:6814, pwr:96035, hp:4.287754e57, atk:2.148133e56, spd:4.5, xp:8.575508e56, gold:9.120353e56 },
+      {name:'Adaine Abernant', lv:6872, pwr:99593, hp:1.222360e58, atk:6.117476e56, spd:4.5, xp:2.444720e57, gold:2.600046e57 },
+      {name:'Merry', lv:6931, pwr:103348, hp:3.548239e58, atk:1.773862e57, spd:4.5, xp:7.096478e57, gold:7.547352e57 },
+    ]
+  },
+  {
+    id: 'eden_academy_grounds', name: 'Fantasy High', icon: '🎓',
+    recLv: 6990, color: '#40c080',
+    enemies: [
+      {name:'The Thirteenth Doctor', lv:6990, pwr:107244, hp:1.029975e59, atk:5.143600e57, spd:4.5, xp:2.059949e58, gold:2.190828e58 },
+      {name:'Yuki Tsunoda', lv:7049, pwr:111287, hp:2.989786e59, atk:1.491470e58, spd:4.5, xp:5.979573e58, gold:6.359485e58 },
+    ]
+  },
+  {
+    id: 'moby_dick_deck', name: 'Neo Egoist League', icon: '⚽',
+    recLv: 7109, color: '#2040e0',
+    enemies: [
+      {name:'Jinshi', lv:7109, pwr:115555, hp:8.836862e59, atk:4.403504e58, spd:4.5, xp:1.767372e59, gold:1.879662e59 },
+      {name:'Peter Hale', lv:7169, pwr:119987, hp:2.611897e60, atk:1.300116e59, spd:4.5, xp:5.223794e59, gold:5.555688e59 },
+      {name:'Todo Aoi', lv:7229, pwr:124588, hp:7.719941e60, atk:3.838540e59, spd:4.5, xp:1.543988e60, gold:1.642085e60 },
+    ]
+  },
+  {
+    id: 'bells_hells_bivouac', name: 'Under the Nemeton', icon: '🌕',
+    recLv: 7289, color: '#5a6a7a',
+    enemies: [
+      {name:'Usopp', lv:7289, pwr:129367, hp:2.281770e61, atk:1.133313e60, spd:4.5, xp:4.563541e60, gold:4.853485e60 },
+      {name:'Nico Hulkenberg', lv:7349, pwr:134328, hp:6.744191e61, atk:3.346060e60, spd:4.5, xp:1.348838e61, gold:1.434537e61 },
+      {name:'DIO', lv:7410, pwr:139567, hp:2.029701e62, atk:1.005898e61, spd:4.5, xp:4.059403e61, gold:4.317317e61 },
+      {name:'Sun Bak', lv:7471, pwr:145011, hp:6.108497e62, atk:3.023947e61, spd:4.5, xp:1.221699e62, gold:1.299320e62 },
+      {name:'Essek Thelyss', lv:7532, pwr:150667, hp:1.838386e63, atk:9.090640e61, spd:4.5, xp:3.676771e62, gold:3.910375e62 },
+      {name:'Vaggie', lv:7594, pwr:156642, hp:5.633563e63, atk:2.782602e62, spd:4.5, xp:1.126713e63, gold:1.198298e63 },
+      {name:'Lewis Hamilton', lv:7656, pwr:162853, hp:1.726353e64, atk:8.517413e62, spd:4.5, xp:3.452707e63, gold:3.672075e63 },
+    ]
+  },
+  {
+    id: 'shibuya_incident', name: 'Spirit Oasis', icon: '🌬️',
+    recLv: 7718, color: '#70c0e0',
+    enemies: [
+      {name:'River Song', lv:7718, pwr:169311, hp:5.290251e64, atk:2.607140e63, spd:4.5, xp:1.058050e64, gold:1.125273e64 },
+      {name:'Nagi Seishiro', lv:7780, pwr:176025, hp:1.621148e65, atk:7.980332e63, spd:4.5, xp:3.242297e64, gold:3.448296e64 },
+      {name:'Tsukasa Shishio', lv:7842, pwr:183005, hp:4.967860e65, atk:2.442742e64, spd:4.5, xp:9.935720e64, gold:1.056699e65 },
+      {name:'Jiraiya', lv:7905, pwr:190382, hp:1.550102e66, atk:7.613259e64, spd:4.5, xp:3.100203e65, gold:3.297175e65 },
+      {name:'Whis', lv:7968, pwr:198056, hp:4.836721e66, atk:2.372814e65, spd:4.5, xp:9.673442e65, gold:1.028804e66 },
+      {name:'Griffith', lv:8031, pwr:206039, hp:1.509183e67, atk:7.395314e65, spd:4.5, xp:3.018366e66, gold:3.210138e66 },
+      {name:'Near', lv:8095, pwr:214478, hp:4.794872e67, atk:2.346854e66, spd:4.5, xp:9.589744e66, gold:1.019903e67 },
+    ]
+  },
+  {
+    id: 'sugar_we_re_going_down', name: 'Sugar, We\'re Going Down', icon: '🎸',
+    recLv: 8159, color: '#8b0000',
+    enemies: [
+      {name:'Richard', lv:8159, pwr:223263, hp:1.523394e68, atk:7.447585e66, spd:4.5, xp:3.046787e67, gold:3.240365e67 },
+      {name:'Sherlock Holmes', lv:8223, pwr:232408, hp:4.840022e68, atk:2.363442e67, spd:4.5, xp:9.680043e67, gold:1.029506e68 },
+      {name:'Orihime Inoue', lv:8287, pwr:241928, hp:1.537738e69, atk:7.500225e67, spd:4.5, xp:3.075477e68, gold:3.270877e68 },
+      {name:'Nico di Angelo', lv:8351, pwr:251837, hp:4.885596e69, atk:2.380147e68, spd:4.5, xp:9.771193e68, gold:1.039201e69 },
+      {name:'Charlie Morningstar', lv:8416, pwr:262317, hp:1.580509e70, atk:7.690765e68, spd:4.5, xp:3.161018e69, gold:3.361854e69 },
+      {name:'Arthur Curry', lv:8481, pwr:273233, hp:5.113008e70, atk:2.485051e69, spd:4.5, xp:1.022602e70, gold:1.087573e70 },
+    ]
+  },
+  {
+    id: 'the_digital_circus', name: 'The Digital Circus', icon: '🎪',
+    recLv: 8546, color: '#e05090',
+    enemies: [
+      {name:'Aira Shiratori', lv:8546, pwr:284603, hp:1.654078e71, atk:8.029734e69, spd:4.5, xp:3.308155e70, gold:3.518339e70 },
+      {name:'Maddie Buckley', lv:8612, pwr:296632, hp:5.448534e71, atk:2.641821e70, spd:4.5, xp:1.089707e71, gold:1.158941e71 },
+      {name:'Bruce Wayne', lv:8678, pwr:309170, hp:1.794748e72, atk:8.691718e70, spd:4.5, xp:3.589495e71, gold:3.817554e71 },
+      {name:'Fearne Calloway', lv:8744, pwr:322238, hp:5.911901e72, atk:2.859617e71, spd:4.5, xp:1.182380e72, gold:1.257503e72 },
+      {name:'Yasha Nydoorin', lv:8810, pwr:335858, hp:1.947381e73, atk:9.408276e71, spd:4.5, xp:3.894762e72, gold:4.142215e72 },
+    ]
+  },
+  {
+    id: 'kamino_ward', name: 'Kamino Ward', icon: '🔥',
+    recLv: 8876, color: '#e05020',
+    enemies: [
+      {name:'Lestat de Lioncourt', lv:8876, pwr:350053, hp:6.414674e73, atk:3.095368e72, spd:4.5, xp:1.282935e73, gold:1.364446e73 },
+      {name:'Chrollo Lucilfer', lv:8943, pwr:365078, hp:2.151506e74, atk:1.036933e73, spd:4.5, xp:4.303013e73, gold:4.576405e73 },
+      {name:'Edward Elric', lv:9010, pwr:380747, hp:7.216236e74, atk:3.473677e73, spd:4.5, xp:1.443247e74, gold:1.534944e74 },
+      {name:'Jack Crawford', lv:9077, pwr:397089, hp:2.420353e75, atk:1.163665e74, spd:4.5, xp:4.840706e74, gold:5.148261e74 },
+      {name:'Franky', lv:9145, pwr:414392, hp:8.265918e75, atk:3.969201e74, spd:4.5, xp:1.653184e75, gold:1.758219e75 },
+    ]
+  },
+  {
+    id: 'aguefort_academy', name: 'Dawn of the New Era', icon: '🌊',
+    recLv: 9213, color: '#2080e0',
+    enemies: [
+      {name:'Trinket', lv:9213, pwr:432450, hp:2.822952e76, atk:1.353874e75, spd:4.5, xp:5.645903e75, gold:6.004616e75 },
+      {name:'The Tenth Doctor', lv:9281, pwr:451294, hp:9.640860e76, atk:4.617991e75, spd:4.5, xp:1.928172e76, gold:2.050678e76 },
+      {name:'Scanlan Shorthalt', lv:9349, pwr:470959, hp:3.292518e77, atk:1.575172e76, spd:4.5, xp:6.585035e76, gold:7.003415e76 },
+      {name:'Rocky', lv:9417, pwr:491481, hp:1.124451e78, atk:5.372830e76, spd:4.5, xp:2.248902e77, gold:2.391785e77 },
+      {name:'Loid Forger', lv:9486, pwr:513219, hp:3.910183e78, atk:1.866012e77, spd:4.5, xp:7.820366e77, gold:8.317233e77 },
+    ]
+  },
+  {
+    id: 'blue_lock_pitch', name: 'On the Grand Line', icon: '☠️',
+    recLv: 9555, color: '#e0e0e0',
+    enemies: [
+      {name:'Son Goku', lv:9555, pwr:535919, hp:1.359733e79, atk:6.480760e77, spd:4.5, xp:2.719467e78, gold:2.892248e78 },
+      {name:'Bobby Singer', lv:9624, pwr:559623, hp:4.728358e79, atk:2.250802e78, spd:4.5, xp:9.456716e78, gold:1.005755e79 },
+      {name:'Kenpachi Zaraki', lv:9694, pwr:584741, hp:1.674215e80, atk:7.959488e78, spd:4.5, xp:3.348431e79, gold:3.561173e79 },
+      {name:'Kurapika', lv:9764, pwr:610988, hp:5.928055e80, atk:2.814705e79, spd:4.5, xp:1.185611e80, gold:1.260939e80 },
+      {name:'Sam Winchester', lv:9834, pwr:638412, hp:2.099004e81, atk:9.953613e79, spd:4.5, xp:4.198007e80, gold:4.464727e80 },
+    ]
+  },
+  {
+    id: 'reichenbach_falls', name: 'Reichenbach Falls', icon: '🔍',
+    recLv: 9904, color: '#2f4f4f',
+    enemies: [
+      {name:'Joker', lv:9904, pwr:667067, hp:7.432144e81, atk:3.519886e80, spd:4.5, xp:1.486429e81, gold:1.580869e81 },
+      {name:'Wade Wilson', lv:9974, pwr:697009, hp:2.631571e82, atk:1.244733e81, spd:4.5, xp:5.263141e81, gold:5.597535e81 },
+      {name:'Nanami Kento', lv:10045, pwr:728751, hp:9.487686e82, atk:4.481883e81, spd:4.5, xp:1.897537e82, gold:2.018097e82 },
+      {name:'Sae Itoshi', lv:10116, pwr:761939, hp:3.420625e83, atk:1.613782e82, spd:4.5, xp:6.841251e82, gold:7.275910e82 },
+      {name:'Mollymauk Tealeaf', lv:10187, pwr:796638, hp:1.233249e84, atk:5.810707e82, spd:4.5, xp:2.466498e83, gold:2.623207e83 },
+    ]
+  },
+  {
+    id: 'sunny_go_deck', name: 'City of Ostania', icon: '🕴️',
+    recLv: 10259, color: '#a04060',
+    enemies: [
+      {name:'Eddie Diaz', lv:10259, pwr:833440, hp:4.527311e84, atk:2.130343e83, spd:4.5, xp:9.054621e83, gold:9.629907e83 },
+      {name:'Vex\'ahlia', lv:10331, pwr:871942, hp:1.661995e85, atk:7.810344e83, spd:4.5, xp:3.323991e84, gold:3.535181e84 },
+      {name:'Victor Stone', lv:10403, pwr:912223, hp:6.101258e85, atk:2.863457e84, spd:4.5, xp:1.220252e85, gold:1.297780e85 },
+      {name:'Claudia', lv:10475, pwr:954365, hp:2.239798e86, atk:1.049812e85, spd:4.5, xp:4.479597e85, gold:4.764208e85 },
+      {name:'Meruem', lv:10547, pwr:998454, hp:8.222397e86, atk:3.848858e85, spd:4.5, xp:1.644479e86, gold:1.748961e86 },
+    ]
+  },
+  {
+    id: 'marquesian_court', name: 'Spring Nationals', icon: '🏐',
+    recLv: 10620, color: '#e8a020',
+    enemies: [
+      {name:'Derek Hale', lv:10620, pwr:1045234, hp:3.073493e87, atk:1.436776e86, spd:4.5, xp:6.146987e86, gold:6.537535e86 },
+      {name:'Endeavor', lv:10693, pwr:1094207, hp:1.148857e88, atk:5.363471e86, spd:4.5, xp:2.297715e87, gold:2.443700e87 },
+      {name:'Rashid', lv:10766, pwr:1145474, hp:4.294375e88, atk:2.002179e87, spd:4.5, xp:8.588750e87, gold:9.134436e87 },
+      {name:'John Watson', lv:10840, pwr:1199896, hp:1.634474e89, atk:7.610204e87, spd:4.5, xp:3.268948e88, gold:3.476641e88 },
+      {name:'Loki', lv:10914, pwr:1256903, hp:6.220943e89, atk:2.892609e88, spd:4.5, xp:1.244189e89, gold:1.323238e89 },
+    ]
+  },
+  {
+    id: 'temple_of_speed', name: 'Temple of Speed', icon: '🏁',
+    recLv: 10988, color: '#e05020',
+    enemies: [
+      {name:'Veth Brenatto', lv:10988, pwr:1316618, hp:2.367742e90, atk:1.099469e89, spd:4.5, xp:4.735484e89, gold:5.036353e89 },
+      {name:'Pomni', lv:11062, pwr:1379171, hp:9.011819e90, atk:4.179040e89, spd:4.5, xp:1.802364e90, gold:1.916877e90 },
+      {name:'Suki', lv:11136, pwr:1444695, hp:3.429972e91, atk:1.588437e90, spd:4.5, xp:6.859945e90, gold:7.295791e90 },
+      {name:'Annabeth Chase', lv:11211, pwr:1514282, hp:1.329270e92, atk:6.147516e90, spd:4.5, xp:2.658539e91, gold:2.827449e91 },
+      {name:'Lydia Martin', lv:11286, pwr:1587221, hp:5.151521e92, atk:2.379192e91, spd:4.5, xp:1.030304e92, gold:1.095765e92 },
+    ]
+  },
+  {
+    id: 'seireitei_gates', name: 'The Final Valley', icon: '🍃',
+    recLv: 11361, color: '#e0a030',
+    enemies: [
+      {name:'Roy Mustang', lv:11361, pwr:1663673, hp:1.996448e93, atk:9.207871e91, spd:4.5, xp:3.992895e92, gold:4.246584e92 },
+      {name:'Whitebeard', lv:11437, pwr:1744902, hp:7.878157e93, atk:3.628486e92, spd:4.5, xp:1.575631e93, gold:1.675739e93 },
+      {name:'Armand', lv:11513, pwr:1830097, hp:3.108790e94, atk:1.429854e93, spd:4.5, xp:6.217580e93, gold:6.612614e93 },
+      {name:'Nishinoya Yu', lv:11589, pwr:1919451, hp:1.226756e95, atk:5.634531e93, spd:4.5, xp:2.453512e94, gold:2.609395e94 },
+      {name:'Moriarty', lv:11665, pwr:2013169, hp:4.840886e95, atk:2.220363e94, spd:4.5, xp:9.681772e94, gold:1.029690e95 },
+    ]
+  },
+  {
+    id: 'cluster_convergence', name: 'Cell Games Arena', icon: '🐢',
+    recLv: 11741, color: '#f08030',
+    enemies: [
+      {name:'Bucky Barnes', lv:11741, pwr:2111461, hp:1.910256e96, atk:8.749640e94, spd:4.5, xp:3.820512e95, gold:4.063248e95 },
+      {name:'Caduceus Clay', lv:11818, pwr:2215943, hp:7.675428e96, atk:3.510692e95, spd:4.5, xp:1.535086e96, gold:1.632617e96 },
+      {name:'Natasha Romanoff', lv:11895, pwr:2325595, hp:3.083995e97, atk:1.408625e96, spd:4.5, xp:6.167990e96, gold:6.559873e96 },
+      {name:'Maomao', lv:11972, pwr:2440672, hp:1.239152e98, atk:5.651945e96, spd:4.5, xp:2.478305e97, gold:2.635764e97 },
+      {name:'Uraraka Ochaco', lv:12050, pwr:2563051, hp:5.069674e98, atk:2.309069e97, spd:4.5, xp:1.013935e98, gold:1.078355e98 },
+    ]
+  },
+  {
+    id: 'bureau_shadows', name: 'Yorknew at Midnight', icon: '🕷️',
+    recLv: 12128, color: '#302040',
+    enemies: [
+      {name:'Gen Asagiri', lv:12128, pwr:2691566, hp:2.074127e99, atk:9.433566e97, spd:4.5, xp:4.148254e98, gold:4.411813e98 },
+      {name:'Yuri Briar', lv:12206, pwr:2826526, hp:8.485758e99, atk:3.854028e98, spd:4.5, xp:1.697152e99, gold:1.804980e99 },
+      {name:'Riza Hawkeye', lv:12284, pwr:2968252, hp:3.471730e100, atk:1.574540e99, spd:4.5, xp:6.943461e99, gold:7.384614e99 },
+      {name:'Will Graham', lv:12362, pwr:3117085, hp:1.420369e101, atk:6.432693e99, spd:4.5, xp:2.840739e100, gold:3.021225e100 },
+      {name:'Fabian Aramaris Seacaster', lv:12441, pwr:3275434, hp:5.916992e101, atk:2.675890e100, spd:4.5, xp:1.183398e101, gold:1.258586e101 },
+    ]
+  },
+];
+
+// ── BOUNTY SYSTEM ────────────────────────────────────────────────────────────
+const BOUNTY_TIERS = [
+  { name:'Unknown',            min:0,          color:'#7a6a50', ambushChance:0,    marineScale:0    },
+  { name:'Rising Rival',       min:1e6,        color:'#4090e0', ambushChance:0.03, marineScale:0.8  },
+  { name:'Notorious',          min:1e9,        color:'#40c080', ambushChance:0.06, marineScale:1.0  },
+  { name:'Supernova',          min:1e12,       color:'#ffdd44', ambushChance:0.09, marineScale:1.3  },
+  { name:'Warlord',            min:1e15,       color:'#ff9955', ambushChance:0.12, marineScale:1.6  },
+  { name:'Emperor',            min:1e18,       color:'#e04030', ambushChance:0.15, marineScale:2.0  },
+  { name:'King of the Pirates',min:1e21,       color:'#ffd700', ambushChance:0.18, marineScale:2.5  },
+];
+
+function getBountyTier(bounty) {
+  let tier = BOUNTY_TIERS[0];
+  for (const t of BOUNTY_TIERS) if (bounty >= t.min) tier = t;
+  return tier;
+}
+
+const MARINE_NAMES = [
+  'Marine Ensign','Marine Petty Officer','Marine Lieutenant','Marine Commander',
+  'Marine Captain','Marine Commodore','Marine Vice Admiral','Marine Admiral',
+  'Fleet Admiral Sengoku','Admiral Akainu','Admiral Kizaru','Admiral Fujitora',
+];
+
+function getMarineStats(bounty) {
+  const tier = getBountyTier(bounty);
+  const scale = tier.marineScale;
+  // Marine scales relative to player's current stats
+  const e = getEnemy();
+  const baseHp  = e ? e.hp  * scale : getMaxHp() * 3 * scale;
+  const baseAtk = e ? getEffectiveEnemyAtk(G.zoneId, G.enemyIdx) * scale : getAtk()   * 1.5 * scale;
+  const baseSpd = e ? Math.min(3.5, e.spd + 0.2) : Math.min(3.5, getSpd() + 0.3);
+  const nameIdx = Math.min(MARINE_NAMES.length - 1, BOUNTY_TIERS.indexOf(tier) * 2);
+  return {
+    name: MARINE_NAMES[nameIdx],
+    hp: Math.floor(baseHp),
+    atk: Math.floor(baseAtk),
+    spd: +baseSpd.toFixed(1),
+    xp: e ? Math.floor(e.xp * scale * 4) : 1000,
+    gold: e ? Math.floor(e.gold * scale * 4) : 1000,
+  };
+}
+
+// ── CREW PASSIVES ─────────────────────────────────────────────────────────────
+// Bonuses activate from 2nd run onwards (prestigeCount >= 1)
+// type: 'xp'|'gold'|'atk'|'spd'|'hp'|'offlineXp'|'heal'
+// value: additive % bonus (0.05 = +5%)
+const CREW_PASSIVES = {
+  'Ada Wong': { icon:'🕶️', flavour:'Mysterious spy, always one step ahead', type:'gold', value:0.021 },
+  'Anya Forger': { icon:'🥜', flavour:'Mind-reading child, secretly saves the day', type:'xp', value:0.021 },
+  'Grog Strongjaw': { icon:'💪', flavour:'Goliath barbarian, simple and mighty', type:'hp', value:0.021 },
+  'Winry Rockbell': { icon:'🔧', flavour:'Automail mechanic, wrench-swinging genius', type:'heal', value:0.022 },
+  'Blitzo': { icon:'💥', flavour:'I.M.P. leader, chaotic showman', type:'gold', value:0.022 },
+  'Alastor': { icon:'📻', flavour:'Radio Demon, static smile menace', type:'atk', value:0.023 },
+  'Loulan': { icon:'🐫', flavour:'Desert wanderer, quiet resilience', type:'hp', value:0.023 },
+  'Daniel Ricciardo': { icon:'😁', flavour:'Honey badger smile, late braking master', type:'gold', value:0.023 },
+  'Penelope': { icon:'🧵', flavour:'Weaving patience, unbreakable resolve', type:'heal', value:0.024 },
+  'Damian Wayne': { icon:'⚔️', flavour:'League assassin turned reluctant hero', type:'atk', value:0.024 },
+  'Chetney Pock O\'Pea': { icon:'🐺', flavour:'Cursed werewolf gnome, unstable brilliance', type:'atk', value:0.024 },
+  'Ray Toro': { icon:'🎸', flavour:'Guitar virtuoso, quiet intensity', type:'atk', value:0.025 },
+  'Claire Redfield': { icon:'🏍️', flavour:'Fierce survivor, sibling determination', type:'spd', value:0.025 },
+  'Bob Bryar': { icon:'🥁', flavour:'Relentless backbeat, driving force', type:'spd', value:0.025 },
+  'Kaiser Michael': { icon:'👑', flavour:'World-class ego, flashy footwork', type:'gold', value:0.026 },
+  'Chrome': { icon:'🧪', flavour:'Science kingdom chemist, brilliant improvisation', type:'gold', value:0.026 },
+  'George Russell': { icon:'📊', flavour:'Data-driven precision, rising star', type:'spd', value:0.027 },
+  'Pete Wentz': { icon:'🖤', flavour:'Emo poet, bassline philosopher', type:'gold', value:0.027 },
+  'Luke Castellan': { icon:'⚔️', flavour:'Son of Hermes, tragic betrayal', type:'atk', value:0.027 },
+  'Eva Stratt': { icon:'📋', flavour:'Project director, no time for niceties', type:'gold', value:0.028 },
+  'Daniel Molloy': { icon:'🎙️', flavour:'The interviewer who won\'t stop asking', type:'xp', value:0.028 },
+  'Shigaraki Tomura': { icon:'🖐️', flavour:'Decay incarnate, world in ruins', type:'atk', value:0.029 },
+  'Krillin': { icon:'💥', flavour:'Destructo Disc, humanity\'s strongest fighter', type:'atk', value:0.029 },
+  'Ragatha': { icon:'🧵', flavour:'Ragdoll caretaker, worn optimism', type:'heal', value:0.03 },
+  'Riz Gukgak': { icon:'🔍', flavour:'Goblin detective, ball-kid instincts', type:'xp', value:0.03 },
+  'Athena Grant': { icon:'👮', flavour:'Sharp-eyed sergeant, unshakeable', type:'xp', value:0.03 },
+  'Stephen Strange': { icon:'🌀', flavour:'Sorcerer Supreme, time-bending will', type:'xp', value:0.031 },
+  'Sergio Perez': { icon:'🛞', flavour:'Tire whisperer, clutch overtakes', type:'heal', value:0.031 },
+  'Gilmore': { icon:'✨', flavour:'Master of magical wonders, showman archmage', type:'gold', value:0.032 },
+  'Jax': { icon:'🐰', flavour:'Chaotic rabbit, gleeful cruelty', type:'atk', value:0.032 },
+  'Dick Grayson': { icon:'🤸', flavour:'First Robin, acrobatic leadership', type:'spd', value:0.033 },
+  'Schierke': { icon:'🔮', flavour:'Young witch, spirit-world mastery', type:'heal', value:0.033 },
+  'Esteban Ocon': { icon:'🥊', flavour:'Scrappy racer, never backs down', type:'atk', value:0.033 },
+  'Pierre Gasly': { icon:'🇫🇷', flavour:'Comeback story, midfield fighter', type:'spd', value:0.034 },
+  'Hal Jordan': { icon:'💚', flavour:'Green Lantern, willpower made light', type:'atk', value:0.034 },
+  'Wanda Maximoff': { icon:'🔴', flavour:'Scarlet Witch, reality-bending grief', type:'atk', value:0.035 },
+  'Thor': { icon:'🔨', flavour:'God of Thunder, Asgardian might', type:'atk', value:0.035 },
+  'Clara Oswald': { icon:'🍮', flavour:'The impossible girl, echoes through time', type:'spd', value:0.036 },
+  'Eren Yeager': { icon:'🦴', flavour:'Founding Titan\'s rage, freedom obsession', type:'atk', value:0.036 },
+  'Katara': { icon:'💧', flavour:'Waterbending master, healer and warrior', type:'heal', value:0.037 },
+  'Caleb Widogast': { icon:'🔥', flavour:'Wizard rebuilding himself through fire', type:'atk', value:0.037 },
+  'Kageyama Tobio': { icon:'🏐', flavour:'King of the court, precision tosses', type:'spd', value:0.038 },
+  'Shane Hollander': { icon:'🏒', flavour:'Team captain, rivalry turned romance', type:'atk', value:0.038 },
+  'Kristen Applebees': { icon:'⚡', flavour:'Cleric of chaos, faith reworked', type:'atk', value:0.039 },
+  'Peter Parker': { icon:'🕸️', flavour:'Friendly neighborhood Spider-Man', type:'spd', value:0.039 },
+  'Turbo-Granny': { icon:'👵', flavour:'Urban legend, terrifyingly fast pursuit', type:'spd', value:0.039 },
+  'Misa Amane': { icon:'📓', flavour:'Second Death Note, devoted and dangerous', type:'gold', value:0.04 },
+  'Iida Tenya': { icon:'🚄', flavour:'Ingenium successor, disciplined speedster', type:'spd', value:0.04 },
+  'Patrick Stump': { icon:'🎹', flavour:'Soulful voice, hook-writing genius', type:'xp', value:0.041 },
+  'Gertrude Robinson': { icon:'💣', flavour:'Ruthless former archivist, no mercy', type:'atk', value:0.041 },
+  'Sasha Blaus': { icon:'🥖', flavour:'Potato girl, scout regiment\'s best nose', type:'gold', value:0.042 },
+  'Daichi Sawamura': { icon:'🏐', flavour:'Reliable captain, calm under pressure', type:'hp', value:0.042 },
+  'Koichi Hirose': { icon:'⚓', flavour:'Echoes, growth from ordinary to hero', type:'atk', value:0.043 },
+  'Martin Blackwood': { icon:'☕', flavour:'Gentle assistant, hidden resolve', type:'heal', value:0.043 },
+  'Hisoka Morow': { icon:'🃏', flavour:'Bungee gum trickster, hungers for strong prey', type:'atk', value:0.044 },
+  'Fjord Stone': { icon:'🌊', flavour:'Falchion of the deep, self-made warlock', type:'atk', value:0.044 },
+  'Jonathan Sims': { icon:'📼', flavour:'Archivist, statement after statement', type:'xp', value:0.045 },
+  'Gangle': { icon:'🎭', flavour:'Masked performer, hidden feelings', type:'spd', value:0.045 },
+  'Husk': { icon:'🥃', flavour:'Gruff bartender, buried kindness', type:'hp', value:0.046 },
+  'Rin Itoshi': { icon:'⚽', flavour:'Genius striker, brotherly rivalry fuel', type:'atk', value:0.046 },
+  'Angel Dust': { icon:'🕷️', flavour:'Spider charm, guarded heart', type:'gold', value:0.047 },
+  'Gon Freecss': { icon:'🎣', flavour:'Jajanken, boundless determination and rage', type:'atk', value:0.047 },
+  'Percy de Rolo': { icon:'🔫', flavour:'Gunslinger tinkerer, vengeance incarnate', type:'atk', value:0.048 },
+  'Mikey Way': { icon:'🎻', flavour:'Steady bassline, grounded heart', type:'hp', value:0.048 },
+  'Kakashi Hatake': { icon:'👁️', flavour:'Copy Ninja, a thousand jutsu mastered', type:'atk', value:0.049 },
+  'Chopper': { icon:'🦌', flavour:'Rumble Ball doctor, monster point courage', type:'heal', value:0.049 },
+  'Toph Beifong': { icon:'🪨', flavour:'Blind earthbender, sees through vibration', type:'atk', value:0.05 },
+  'Jotaro Kujo': { icon:'⭐', flavour:'Star Platinum, time-stopping resolve', type:'atk', value:0.05 },
+  'Keyleth': { icon:'🌿', flavour:'Druid of Zephrah, growing into power', type:'heal', value:0.051 },
+  'Steve Rogers': { icon:'🛡️', flavour:'First Avenger, unwavering shield', type:'hp', value:0.051 },
+  'Shanks': { icon:'🍷', flavour:'A single glance stops all conflict', type:'atk', value:0.052 },
+  'Hinata Shoyo': { icon:'🏐', flavour:'Little giant, decoy who became ace', type:'spd', value:0.052 },
+  'Millie': { icon:'🗡️', flavour:'Blade-happy sweetheart, fierce love', type:'atk', value:0.053 },
+  'Lito Rodriguez': { icon:'🎬', flavour:'Telenovela star, braver than he admits', type:'gold', value:0.053 },
+  'Olivier Armstrong': { icon:'❄️', flavour:'Ice Queen general, zero tolerance', type:'atk', value:0.054 },
+  'Momo Ayase': { icon:'👻', flavour:'Exorcist duo, spirit-punching power', type:'atk', value:0.054 },
+  'The Eleventh Doctor': { icon:'🎀', flavour:'Bow ties are cool, ancient and childlike', type:'xp', value:0.055 },
+  'Isidro': { icon:'🗡️', flavour:'Aspiring swordsman, fierce determination', type:'atk', value:0.055 },
+  'Ryland Grace': { icon:'🧪', flavour:'Reluctant astronaut, saves the sun', type:'xp', value:0.056 },
+  'Tim Drake': { icon:'🧠', flavour:'World\'s greatest detective-in-training', type:'xp', value:0.056 },
+  'Yuji Itadori': { icon:'👊', flavour:'Sukuna\'s vessel, relentless fists', type:'atk', value:0.057 },
+  'Yor Forger': { icon:'🗡️', flavour:'Thorn Princess, elegant assassin', type:'atk', value:0.058 },
+  'Hannibal Lecter': { icon:'🍽️', flavour:'Refined palate, terrifying precision', type:'atk', value:0.058 },
+  'Louis de Pointe du Lac': { icon:'🥀', flavour:'Melancholy immortal, patient hunter', type:'hp', value:0.059 },
+  'Piccolo': { icon:'🟢', flavour:'Namekian warrior, mentor\'s growth', type:'hp', value:0.059 },
+  'Isabella': { icon:'👑', flavour:'Princess who\'d rather adventure', type:'gold', value:0.06 },
+  'Dorian Storm': { icon:'🎭', flavour:'Rockstar bard, chaotic magnetic charm', type:'gold', value:0.06 },
+  'Bachira Meguru': { icon:'👹', flavour:'Monster inside, chaotic dribbling genius', type:'atk', value:0.061 },
+  'Odysseus': { icon:'🏹', flavour:'Cunning king, ten-year journey home', type:'atk', value:0.061 },
+  'Zuko': { icon:'🔥', flavour:'Banished prince, redemption\'s fire', type:'atk', value:0.062 },
+  'Mei Nianqing': { icon:'🕯️', flavour:'Calamity turned guardian, quiet strength', type:'gold', value:0.062 },
+  'Sakura Haruno': { icon:'🌸', flavour:'Byakugo seal, monstrous strength healer', type:'heal', value:0.063 },
+  'FCG': { icon:'🤖', flavour:'Found-family construct, unexpectedly wise', type:'heal', value:0.063 },
+  'Charles Leclerc': { icon:'🔴', flavour:'Scuderia heartbeat, raw speed', type:'spd', value:0.064 },
+  'Kohaku': { icon:'🍡', flavour:'Village apothecary apprentice, resourceful', type:'heal', value:0.064 },
+  'Oscar Piastri': { icon:'🐨', flavour:'Calm rookie, wise beyond his years', type:'xp', value:0.065 },
+  'Donna Noble': { icon:'🚕', flavour:'Most important woman in creation', type:'xp', value:0.066 },
+  'Max Verstappen': { icon:'🏎️', flavour:'Relentless race craft, championship drive', type:'atk', value:0.066 },
+  'Mycroft Holmes': { icon:'☂️', flavour:'The British government, quietly', type:'gold', value:0.067 },
+  'Crowley': { icon:'😈', flavour:'King of Hell, deals with everyone', type:'gold', value:0.067 },
+  'Kaminari Denki': { icon:'⚡', flavour:'Electrification, overload with a grin', type:'atk', value:0.068 },
+  'Zatanna': { icon:'🎩', flavour:'Backwards-speaking sorceress', type:'heal', value:0.068 },
+  'Stolas': { icon:'🦉', flavour:'Owl prince, longing and grimoires', type:'heal', value:0.069 },
+  'Alphonse Elric': { icon:'⚙️', flavour:'Soul bound to armor, gentle giant\'s heart', type:'hp', value:0.069 },
+  'Hyoga': { icon:'❄️', flavour:'Ice hunter, apex predator instincts', type:'atk', value:0.07 },
+  'Tony Stark': { icon:'🤖', flavour:'Genius billionaire, armored genius', type:'gold', value:0.071 },
+  'Hua Cheng': { icon:'👁️', flavour:'Ghost King, devoted beyond death', type:'atk', value:0.071 },
+  'Guts': { icon:'⚔️', flavour:'Black Swordsman, struggle against fate', type:'atk', value:0.072 },
+  'Percy Jackson': { icon:'🔱', flavour:'Son of Poseidon, reluctant hero', type:'atk', value:0.072 },
+  'Connie Springer': { icon:'🏃', flavour:'Scout regiment heart, faster than he looks', type:'spd', value:0.073 },
+  'Seiko Ayase': { icon:'🎨', flavour:'Nagi\'s sister, quietly grounds him', type:'gold', value:0.073 },
+  'Sokka': { icon:'🪃', flavour:'Boomerang genius, plans that work', type:'gold', value:0.074 },
+  'Jester Lavorre': { icon:'🎨', flavour:'Traveler\'s chosen, mischief and healing', type:'heal', value:0.074 },
+  'Valtteri Bottas': { icon:'😌', flavour:'Zen wingman turned free spirit', type:'heal', value:0.075 },
+  'Alana Bloom': { icon:'⚕️', flavour:'Psychiatrist who sees past the mask', type:'heal', value:0.076 },
+  'Dabi': { icon:'🔵', flavour:'Blue flame secret, burning legacy', type:'atk', value:0.076 },
+  'Wolfgang Bogdanow': { icon:'🔪', flavour:'Berlin thief, fearless to a fault', type:'atk', value:0.077 },
+  'Andy Hurley': { icon:'🥁', flavour:'Vegan straight-edge powerhouse', type:'hp', value:0.077 },
+  'Vegeta': { icon:'👑', flavour:'Saiyan prince, pride fuels every leap', type:'atk', value:0.078 },
+  'Gojo Satoru': { icon:'👁️', flavour:'Limitless, honored one\'s infinity', type:'atk', value:0.078 },
+  'Lando Norris': { icon:'🧡', flavour:'Papaya charm, growing into a winner', type:'atk', value:0.079 },
+  'Nami': { icon:'🍊', flavour:'Weather witch, navigates any storm', type:'gold', value:0.08 },
+  'Aang': { icon:'💨', flavour:'Last Airbender, avatar state fury', type:'spd', value:0.08 },
+  'Scott McCall': { icon:'🐺', flavour:'True alpha, leads by example', type:'hp', value:0.081 },
+  'Bokuto Koutarou': { icon:'🦉', flavour:'Ace spiker, emotional rollercoaster energy', type:'atk', value:0.081 },
+  'Gaoshun': { icon:'🛡️', flavour:'Loyal eunuch guard, unwavering devotion', type:'hp', value:0.082 },
+  'Itachi Uchiha': { icon:'🐦‍⬛', flavour:'Village\'s burden, tragic genius shinobi', type:'atk', value:0.082 },
+  'Bond Forger': { icon:'🐕', flavour:'Precognitive good boy, family protector', type:'hp', value:0.083 },
+  'Sukuna': { icon:'👹', flavour:'King of Curses, malevolent shrine deity', type:'atk', value:0.084 },
+  'Toshiro Hitsugaya': { icon:'❄️', flavour:'Prodigy captain, ice dragon\'s wrath', type:'atk', value:0.084 },
+  'Senku Ishigami': { icon:'🔬', flavour:'Ten billion percent, science kingdom founder', type:'gold', value:0.085 },
+  'Kala Dandekar': { icon:'💊', flavour:'Chemist\'s precision, devout heart', type:'heal', value:0.085 },
+  'Yoshikage Kira': { icon:'💎', flavour:'Killer Queen, quiet ordinary life facade', type:'gold', value:0.086 },
+  'Tim Stoker': { icon:'😄', flavour:'Charming smile, quiet grief beneath', type:'spd', value:0.086 },
+  'Jonah Magnus': { icon:'👁️', flavour:'The Eye\'s founder, centuries of watching', type:'atk', value:0.087 },
+  'Sasuke Uchiha': { icon:'⚡', flavour:'Sharingan avenger, lightning blade', type:'atk', value:0.088 },
+  'Madara Uchiha': { icon:'🌙', flavour:'Legendary Uchiha, infinite tsukuyomi ambition', type:'atk', value:0.088 },
+  'Castiel': { icon:'🪽', flavour:'Angel of the Lord, profound bond', type:'heal', value:0.089 },
+  'Pike Trickfoot': { icon:'✨', flavour:'Everlight\'s chosen cleric', type:'heal', value:0.089 },
+  'Naruto Uzumaki': { icon:'🍥', flavour:'Nine-Tails jinchuriki, never gives up', type:'atk', value:0.09 },
+  'Moxxie': { icon:'🔫', flavour:'Precision gunman, anxious loyalty', type:'atk', value:0.091 },
+  'Casca': { icon:'⚔️', flavour:'Band of the Hawk commander, hard-won strength', type:'atk', value:0.091 },
+  'Vax\'ildan': { icon:'🗡️', flavour:'Deal-maker with the Raven Queen', type:'atk', value:0.092 },
+  'Killua Zoldyck': { icon:'⚡', flavour:'Godspeed, assassin family prodigy', type:'spd', value:0.092 },
+  'Leorio Paradinight': { icon:'💼', flavour:'Aspiring doctor, hits like a truck', type:'heal', value:0.093 },
+  'Ilya Rozanov': { icon:'🥅', flavour:'Golden boy on ice, fierce competitor', type:'spd', value:0.093 },
+  'Zeno-sama': { icon:'👶', flavour:'Omni-King, erases with a whim', type:'atk', value:0.094 },
+  'Gareth': { icon:'🎖️', flavour:'Loyal general, honor above orders', type:'atk', value:0.095 },
+  'All Might': { icon:'💪', flavour:'Symbol of Peace, Plus Ultra spirit', type:'hp', value:0.095 },
+  'Lance Stroll': { icon:'🍁', flavour:'Quiet determination, steady laps', type:'hp', value:0.096 },
+  'Bakugo Katsuki': { icon:'💥', flavour:'Explosive pride, refuses to lose', type:'atk', value:0.096 },
+  'King Bradley': { icon:'⚔️', flavour:'Ultimate eye, Fuhrer\'s swordsmanship', type:'atk', value:0.097 },
+  'Isagi Yoichi': { icon:'⚽', flavour:'Field goal vision, ego devouring instinct', type:'atk', value:0.098 },
+  'Fig Faeth': { icon:'🎸', flavour:'Tiefling bard, rock and rebellion', type:'gold', value:0.098 },
+  'Ichigo Kurosaki': { icon:'⚔️', flavour:'Substitute Shinigami, Getsuga Tensho', type:'atk', value:0.099 },
+  'Logan Sargeant': { icon:'🇺🇸', flavour:'American hope, learning under pressure', type:'xp', value:0.099 },
+  'Riley Blue': { icon:'🎧', flavour:'DJ carrying grief into music', type:'spd', value:0.1 },
+  'Kevin Magnussen': { icon:'🛡️', flavour:'Uncompromising defense, team-first grit', type:'hp', value:0.101 },
+  'Renji Abarai': { icon:'🐍', flavour:'Zabimaru, loyalty forged in ambition', type:'atk', value:0.101 },
+  'Harley Quinn': { icon:'🔨', flavour:'Chaotic ex-therapist, unpredictable', type:'gold', value:0.102 },
+  'Rock Lee': { icon:'🥋', flavour:'Eight Gates, hard work over talent', type:'spd', value:0.102 },
+  'Charlie Bradbury': { icon:'💻', flavour:'Moose, Squirrel, and hacking skills', type:'xp', value:0.103 },
+  'Jackson Whittemore': { icon:'🦎', flavour:'Kanima\'s curse, apex of Beacon Hills', type:'atk', value:0.104 },
+  'Zhou Guanyu': { icon:'🐉', flavour:'First Chinese F1 driver, steady progress', type:'xp', value:0.104 },
+  'L Lawliet': { icon:'🍰', flavour:'World\'s greatest detective, sweet tooth genius', type:'xp', value:0.105 },
+  'Jean Kirstein': { icon:'🐴', flavour:'Reluctant leader, grows into command', type:'hp', value:0.105 },
+  'Beauregard Lionett': { icon:'👊', flavour:'Cobalt Soul monk, blunt and loyal', type:'spd', value:0.106 },
+  'Mikasa Ackerman': { icon:'🧣', flavour:'Ackerman bloodline, unmatched blade speed', type:'atk', value:0.107 },
+  'Stiles Stilinski': { icon:'🦇', flavour:'Human wit outsmarts the supernatural', type:'xp', value:0.107 },
+  'Clark Kent': { icon:'🦸', flavour:'Man of Steel, humble farmboy heart', type:'hp', value:0.108 },
+  'Bobby Nash': { icon:'👨‍🍳', flavour:'Captain and chef, steady leadership', type:'hp', value:0.108 },
+  'Shi Qingxuan': { icon:'🌬️', flavour:'Wind Master, carefree wandering', type:'spd', value:0.109 },
+  'Hawks': { icon:'🪶', flavour:'Fastest hero, feathers and espionage', type:'spd', value:0.11 },
+  'Chris Redfield': { icon:'💪', flavour:'Boulder-punching BSAA veteran', type:'atk', value:0.11 },
+  'Zeus': { icon:'⚡', flavour:'King of Olympus, thunderous judgment', type:'atk', value:0.111 },
+  'Imogen Temult': { icon:'🧿', flavour:'Ruby of the Sea, telepathic bond', type:'xp', value:0.111 },
+  'Gorgug Thistlespring': { icon:'🔨', flavour:'Half-orc barbarian, gentle giant', type:'hp', value:0.112 },
+  'Carlos Sainz': { icon:'🎯', flavour:'Smooth operator, podium consistency', type:'gold', value:0.113 },
+  'Grover Underwood': { icon:'🎵', flavour:'Satyr protector, searcher of Pan', type:'heal', value:0.113 },
+  'Barou Shoei': { icon:'⚽', flavour:'Egotist striker, unmatched shot power', type:'atk', value:0.114 },
+  'Laudna': { icon:'👻', flavour:'Haunted and hexed, undying curse', type:'atk', value:0.115 },
+  'Capheus Otieno': { icon:'🚌', flavour:'Van Damn driver, unbreakable hope', type:'hp', value:0.115 },
+  'Loona': { icon:'🐺', flavour:'Hellhound attitude, soft underneath', type:'spd', value:0.116 },
+  'Leon Kennedy': { icon:'🔫', flavour:'Rookie cop, unkillable action hero', type:'atk', value:0.116 },
+  'Ashton Greymoore': { icon:'🐗', flavour:'Barbed hide, more than meets the eye', type:'hp', value:0.117 },
+  'The Twelfth Doctor': { icon:'🎸', flavour:'Am I a good man? Guitar included', type:'atk', value:0.118 },
+  'Gerard Way': { icon:'🎤', flavour:'Black Parade frontman, theatrical grief', type:'xp', value:0.118 },
+  'Nan Feng': { icon:'⚔️', flavour:'Loyal general, wind at his back', type:'atk', value:0.119 },
+  'Izuku Midoriya': { icon:'💚', flavour:'One For All, hero deducing to victory', type:'xp', value:0.119 },
+  'Kinger': { icon:'👑', flavour:'Fractured king, chess-obsessed', type:'gold', value:0.12 },
+  'Shoto Todoroki': { icon:'🔥', flavour:'Half-Cold Half-Hot, both sides of his power', type:'atk', value:0.121 },
+  'Roronoa Zoro': { icon:'⚔️', flavour:'Three-sword style, world\'s greatest ambition', type:'atk', value:0.121 },
+  'Josuke Higashikata': { icon:'💠', flavour:'Crazy Diamond, restores anything he touches', type:'heal', value:0.122 },
+  'Nomi Marks': { icon:'💻', flavour:'Hacktivist mind of the cluster', type:'xp', value:0.123 },
+  'Frank Iero': { icon:'🎸', flavour:'Rhythm and fury, restless energy', type:'atk', value:0.123 },
+  'Monkey D. Luffy (Gear 5)': { icon:'☀️', flavour:'Sun God Nika, joyboy\'s freedom awakened', type:'atk', value:0.124 },
+  'Sanji': { icon:'🍳', flavour:'All Blue chef, diable jambe kicks', type:'gold', value:0.124 },
+  'Armin Arlert': { icon:'🧠', flavour:'Colossal strategist, quiet brilliance', type:'xp', value:0.125 },
+  'Jason Todd': { icon:'🔫', flavour:'Red Hood, resurrection\'s fury', type:'atk', value:0.126 },
+  'Jill Valentine': { icon:'🧟', flavour:'Master of unlocking, S.T.A.R.S. survivor', type:'hp', value:0.126 },
+  'Bedelia du Maurier': { icon:'🥂', flavour:'Always three steps ahead', type:'gold', value:0.127 },
+  'Ryuk': { icon:'🍎', flavour:'Shinigami who just wanted entertainment', type:'gold', value:0.128 },
+  'Megumi Fushiguro': { icon:'🐕', flavour:'Ten Shadows technique, divine dog summons', type:'atk', value:0.128 },
+  'Galavant': { icon:'⚔️', flavour:'Fallen hero, singing his way back up', type:'atk', value:0.129 },
+  'Evan Buckley': { icon:'🚒', flavour:'Buck, eager firefighter heart', type:'atk', value:0.129 },
+  'Kaido': { icon:'🐉', flavour:'Strongest creature, unkillable will', type:'hp', value:0.13 },
+  'Giorno (Gold Experience Requiem)': { icon:'🐞', flavour:'Erases causality, boss of bosses', type:'atk', value:0.131 },
+  'Polites': { icon:'🌊', flavour:'Open hand, gentle warmth', type:'heal', value:0.131 },
+  'Xie Lian': { icon:'🏮', flavour:'Fallen prince, three-times ascended', type:'heal', value:0.132 },
+  'Barry Allen': { icon:'⚡', flavour:'The Flash, fastest man alive', type:'spd', value:0.133 },
+  'Beerus': { icon:'😴', flavour:'God of Destruction, lazy devastating power', type:'atk', value:0.133 },
+  'Rukia Kuchiki': { icon:'❄️', flavour:'Sode no Shirayuki, noble house dignity', type:'atk', value:0.134 },
+  'Oliver Queen': { icon:'🏹', flavour:'Green Arrow, billionaire vigilante', type:'gold', value:0.135 },
+  'Fernando Alonso': { icon:'🦁', flavour:'Two-time champion, ageless craft', type:'atk', value:0.135 },
+  'Nobara Kugisaki': { icon:'📌', flavour:'Straw doll technique, unshakeable pride', type:'atk', value:0.136 },
+  'Sid': { icon:'🛡️', flavour:'Squire with unexpected heart', type:'hp', value:0.136 },
+  'Joe Trohman': { icon:'🎸', flavour:'Riff machine, wild stage energy', type:'atk', value:0.137 },
+  'Dean Winchester': { icon:'🔫', flavour:'Saving people, hunting things', type:'atk', value:0.138 },
+  'Circe': { icon:'🪄', flavour:'Enchantress of Aeaea, transformation magic', type:'gold', value:0.138 },
+  'Allison Argent': { icon:'🏹', flavour:'Hunter\'s daughter, redefines the code', type:'atk', value:0.139 },
+  'Light Yagami': { icon:'📓', flavour:'Death Note strategist, godhood delusion', type:'xp', value:0.14 },
+  'Giorno Giovanna': { icon:'🐞', flavour:'Gold Experience, mafia boss dream', type:'xp', value:0.14 },
+  'Tsukishima Kei': { icon:'🦖', flavour:'Blocker analyst, quiet dinosaur enthusiast', type:'xp', value:0.141 },
+  'Irene Adler': { icon:'🎭', flavour:'The woman who outwitted him', type:'gold', value:0.142 },
+  'Orym of the Air Ashari': { icon:'🪶', flavour:'Grief-forged fighter, precise strikes', type:'atk', value:0.142 },
+  'Portgas D. Ace': { icon:'🔥', flavour:'Fire Fist, Whitebeard\'s beloved son', type:'atk', value:0.143 },
+  'Levi Ackerman': { icon:'⚔️', flavour:'Humanity\'s strongest, spotless blade', type:'atk', value:0.143 },
+  'Alex Albon': { icon:'🇹🇭', flavour:'Williams revival, quiet consistency', type:'spd', value:0.144 },
+  'Diana Prince': { icon:'🛡️', flavour:'Amazon princess, lasso of truth', type:'atk', value:0.145 },
+  'Frederick Chilton': { icon:'📋', flavour:'Ambitious to a fault, survives anyway', type:'hp', value:0.145 },
+  'Adaine Abernant': { icon:'📖', flavour:'Cursed with sight, wizardly precision', type:'xp', value:0.146 },
+  'Merry': { icon:'🍺', flavour:'Tavern wench turned battle-hardy', type:'hp', value:0.147 },
+  'The Thirteenth Doctor': { icon:'🌟', flavour:'Fam-first, endlessly curious', type:'xp', value:0.147 },
+  'Yuki Tsunoda': { icon:'🔊', flavour:'Fiery radio calls, fearless attack', type:'atk', value:0.148 },
+  'Jinshi': { icon:'🌙', flavour:'Palace strategist, hidden noble grace', type:'gold', value:0.149 },
+  'Peter Hale': { icon:'😏', flavour:'Manipulative uncle, always scheming', type:'gold', value:0.149 },
+  'Todo Aoi': { icon:'🔥', flavour:'Boogie Woogie, brotherly encouragement', type:'atk', value:0.15 },
+  'Usopp': { icon:'🎯', flavour:'Sniper King, brave liar of the Sunny', type:'gold', value:0.151 },
+  'Nico Hulkenberg': { icon:'⏱️', flavour:'Most-experienced rookie energy, gritty', type:'hp', value:0.151 },
+  'DIO': { icon:'⏳', flavour:'The World stops time, vampire ambition', type:'atk', value:0.152 },
+  'Sun Bak': { icon:'🥋', flavour:'Silent fists, unbreakable discipline', type:'atk', value:0.153 },
+  'Essek Thelyss': { icon:'🌀', flavour:'Shadowhand, dunamancy beyond mortal ken', type:'xp', value:0.153 },
+  'Vaggie': { icon:'⚔️', flavour:'Fierce protector, hidden past', type:'atk', value:0.154 },
+  'Lewis Hamilton': { icon:'🏆', flavour:'Record-breaking legend, cool composure', type:'xp', value:0.155 },
+  'River Song': { icon:'📓', flavour:'Spoilers — she always knows what\'s coming', type:'gold', value:0.155 },
+  'Nagi Seishiro': { icon:'⚽', flavour:'Lazy genius, effortless ball control', type:'gold', value:0.156 },
+  'Tsukasa Shishio': { icon:'🏛️', flavour:'Primal warrior, reveres strength and beauty', type:'atk', value:0.156 },
+  'Jiraiya': { icon:'🐸', flavour:'Toad Sage, wrote the Child of Prophecy', type:'xp', value:0.157 },
+  'Whis': { icon:'👼', flavour:'Angel attendant, effortless mastery', type:'spd', value:0.158 },
+  'Griffith': { icon:'🦅', flavour:'Falcon of Light, dream sacrificed everything', type:'atk', value:0.158 },
+  'Near': { icon:'🎲', flavour:'L\'s successor, dice-tower deduction', type:'xp', value:0.159 },
+  'Richard': { icon:'👸', flavour:'Foppish king, surprisingly earnest', type:'gold', value:0.16 },
+  'Sherlock Holmes': { icon:'🔍', flavour:'The world\'s only consulting detective', type:'xp', value:0.16 },
+  'Orihime Inoue': { icon:'🌸', flavour:'Shun Shun Rikka, rejection of reality\'s wounds', type:'heal', value:0.161 },
+  'Nico di Angelo': { icon:'💀', flavour:'Son of Hades, shadow-travel loner', type:'atk', value:0.162 },
+  'Charlie Morningstar': { icon:'😇', flavour:'Hell\'s princess, redemption dreamer', type:'heal', value:0.162 },
+  'Arthur Curry': { icon:'🔱', flavour:'King of Atlantis, ocean\'s might', type:'hp', value:0.163 },
+  'Aira Shiratori': { icon:'⚽', flavour:'Flashy showman, style over substance genius', type:'gold', value:0.164 },
+  'Maddie Buckley': { icon:'📞', flavour:'Dispatcher, calm voice in chaos', type:'gold', value:0.164 },
+  'Bruce Wayne': { icon:'🦇', flavour:'The Dark Knight, endless vigilance', type:'atk', value:0.165 },
+  'Fearne Calloway': { icon:'🍄', flavour:'Faerie druid, chaotic wild shapes', type:'spd', value:0.166 },
+  'Yasha Nydoorin': { icon:'🦋', flavour:'Storm\'s fury, quiet devotion', type:'atk', value:0.166 },
+  'Lestat de Lioncourt': { icon:'🎻', flavour:'Vampire rockstar, magnetic and vicious', type:'atk', value:0.167 },
+  'Chrollo Lucilfer': { icon:'📓', flavour:'Skill Hunter, Phantom Troupe leader', type:'xp', value:0.168 },
+  'Edward Elric': { icon:'⚗️', flavour:'Fullmetal Alchemist, equivalent exchange mastery', type:'atk', value:0.168 },
+  'Jack Crawford': { icon:'🕵️', flavour:'FBI section chief, relentless pursuit', type:'xp', value:0.169 },
+  'Franky': { icon:'🤖', flavour:'SUPER cyborg shipwright, radical dreams', type:'offlineXp', value:0.17 },
+  'Trinket': { icon:'🐻', flavour:'Loyal bear, always by her side', type:'hp', value:0.17 },
+  'The Tenth Doctor': { icon:'🕰️', flavour:'Allons-y! Time Lord energy', type:'spd', value:0.171 },
+  'Scanlan Shorthalt': { icon:'🎵', flavour:'Bardic charm, unexpected heart', type:'gold', value:0.172 },
+  'Rocky': { icon:'🕷️', flavour:'Eridian engineer, unlikely friendship', type:'gold', value:0.172 },
+  'Loid Forger': { icon:'🕴️', flavour:'Master spy, Operation Strix precision', type:'gold', value:0.173 },
+  'Son Goku': { icon:'🐒', flavour:'Saiyan joy of battle, ever-growing power', type:'atk', value:0.174 },
+  'Bobby Singer': { icon:'📚', flavour:'Idjit-wrangler, encyclopedic hunter', type:'gold', value:0.174 },
+  'Kenpachi Zaraki': { icon:'⚔️', flavour:'Battle-hungry captain, raw destruction', type:'atk', value:0.175 },
+  'Kurapika': { icon:'👁️', flavour:'Scarlet eyes, chain jail vengeance', type:'atk', value:0.176 },
+  'Sam Winchester': { icon:'📖', flavour:'Research-first hunter, demon blood veins', type:'xp', value:0.176 },
+  'Joker': { icon:'🃏', flavour:'Clown Prince of Crime, pure chaos', type:'atk', value:0.177 },
+  'Wade Wilson': { icon:'🗡️', flavour:'Merc with a Mouth, unkillable chaos', type:'atk', value:0.178 },
+  'Nanami Kento': { icon:'🍔', flavour:'Ratio technique, unbothered overtime pay', type:'atk', value:0.178 },
+  'Sae Itoshi': { icon:'⚽', flavour:'Weak-side genius, monstrous ball sense', type:'atk', value:0.179 },
+  'Mollymauk Tealeaf': { icon:'🎪', flavour:'Circus blade-dancer, tarot-touched', type:'atk', value:0.18 },
+  'Eddie Diaz': { icon:'🎖️', flavour:'Army medic turned firefighter', type:'heal', value:0.18 },
+  'Vex\'ahlia': { icon:'🏹', flavour:'Twin arrows, sharper wit', type:'gold', value:0.181 },
+  'Victor Stone': { icon:'🤖', flavour:'Cyborg, half-machine determination', type:'hp', value:0.182 },
+  'Claudia': { icon:'🕯️', flavour:'Eternal child, deceptively lethal', type:'spd', value:0.182 },
+  'Meruem': { icon:'👑', flavour:'Chimera Ant King, evolving perfection', type:'atk', value:0.183 },
+  'Derek Hale': { icon:'🐾', flavour:'Broody wolf, hard-earned trust', type:'atk', value:0.184 },
+  'Endeavor': { icon:'🔥', flavour:'Number one hero, hellflame prominence', type:'atk', value:0.184 },
+  'Rashid': { icon:'🛡️', flavour:'Loyal familiar, quietly indispensable', type:'hp', value:0.185 },
+  'John Watson': { icon:'🩺', flavour:'Loyal doctor, steady under fire', type:'heal', value:0.186 },
+  'Loki': { icon:'🐍', flavour:'God of Mischief, trickster charm', type:'gold', value:0.186 },
+  'Veth Brenatto': { icon:'🏹', flavour:'Halfling sharpshooter, mother\'s resolve', type:'gold', value:0.187 },
+  'Pomni': { icon:'🃏', flavour:'New arrival, holding onto sanity', type:'xp', value:0.188 },
+  'Suki': { icon:'🥋', flavour:'Kyoshi Warrior leader, unmatched skill', type:'atk', value:0.188 },
+  'Annabeth Chase': { icon:'🦉', flavour:'Daughter of Athena, master strategist', type:'xp', value:0.189 },
+  'Lydia Martin': { icon:'🔮', flavour:'Banshee scream, genius intuition', type:'xp', value:0.19 },
+  'Roy Mustang': { icon:'🔥', flavour:'Flame alchemist, eyes on the top', type:'atk', value:0.19 },
+  'Whitebeard': { icon:'🌊', flavour:'Strongest man alive, Gura Gura no Mi tremors', type:'hp', value:0.191 },
+  'Armand': { icon:'🎭', flavour:'Theatre master, centuries of cunning', type:'gold', value:0.192 },
+  'Nishinoya Yu': { icon:'🏐', flavour:'Guardian deity, libero reflexes', type:'spd', value:0.192 },
+  'Moriarty': { icon:'🕷️', flavour:'Napoleon of crime, endless schemes', type:'atk', value:0.193 },
+  'Bucky Barnes': { icon:'🦾', flavour:'Winter Soldier, reclaiming himself', type:'atk', value:0.194 },
+  'Caduceus Clay': { icon:'🍵', flavour:'Wildmother\'s gentle, patient cleric', type:'heal', value:0.195 },
+  'Natasha Romanoff': { icon:'🕷️', flavour:'Black Widow, master spy assassin', type:'spd', value:0.195 },
+  'Maomao': { icon:'🌿', flavour:'Poison-loving apothecary, sharp deduction', type:'heal', value:0.196 },
+  'Uraraka Ochaco': { icon:'🌕', flavour:'Zero Gravity, rising hero with grit', type:'spd', value:0.197 },
+  'Gen Asagiri': { icon:'⚗️', flavour:'Science kingdom smile, chemical genius', type:'gold', value:0.197 },
+  'Yuri Briar': { icon:'🔪', flavour:'Garden secret assassin, devoted family facade', type:'atk', value:0.198 },
+  'Riza Hawkeye': { icon:'🎯', flavour:'Hawk\'s Eye, unerring marksmanship', type:'atk', value:0.199 },
+  'Will Graham': { icon:'🧠', flavour:'Empathy so sharp it hurts', type:'xp', value:0.199 },
+  'Fabian Aramaris Seacaster': { icon:'🎩', flavour:'Swashbuckling reformed rich kid', type:'atk', value:0.2 },
+};
+
+// Returns combined crew bonuses as multipliers (1 + sum of matching bonuses)
+// Only active from 2nd run onwards
+function getCrewBonus(type) {
+  if (G.prestigeCount < 1) return 1;
+  let bonus = 0;
+  for (const name of G.crewRecruited) {
+    const p = CREW_PASSIVES[name];
+    if (p && p.type === type) bonus += p.value;
+  }
+  return 1 + bonus;
+}
+const SAVE_KEY = 'grandline_save';
+
+// Offline progress efficiency (80% of XP when away)
+const OFFLINE_EFF = 1;
+
+// ── GAME STATE ───────────────────────────────────────────────────────────────
+const G = {
+  lv: 1,
+  xp: 0,
+  gold: 0,
+  prestigeCount: 0,
+  // base stats (recalculated from level via recalcBaseStats)
+  baseAtk: 2,
+  baseHp: 15,
+  baseSpd: 0.2,
+  // current hp
+  playerHp: 100,
+  // upgrade counts
+  // combat
+  zoneId: 'vox_machina_camp',
+  enemyIdx: 0,
+  enemyHp: 0,
+  enemyMaxHp: 0,
+  fightRunning: false,
+  bankedLevels: 0,  // total levels reached across all prestiges
+  prestigeChoices: { xp: 0, spd: 0, atk: 0, hp: 0, healspd: 0 },
+  prestigePoints: 0,       // unspent prestige points from "Normal" prestige, spendable on stat allocation only
+  weakenPoints: 0,         // unspent prestige points from "Weaken" prestige, spendable on enemy debuffs only
+  enemyDebuffs: {},        // key: "zoneId__enemyIdx" -> points spent weakening that enemy's attack
+  megaMultiplier: 1,       // selected mega-fight multiplier (1 = normal fight, 2-5 = mega fight)
+  megaActive: false,       // true while a mega fight is actually in progress (locked in when fight starts)
+  megaPanelHidden: false,  // whether the mega-fight multiplier panel is collapsed
+  isHealing: false,
+  bounty: 0,
+  ambushPending: false,
+  ambushActive: false,
+  savedEnemyHp: 0,
+  ambushMarine: null,
+  offlineMode: false,
+  offlineStart: null,
+  beatenEnemies: {}, // key: "zoneId-idx", value: killCount (int)
+  crewRecruited: [], // enemy names, permanent across prestiges
+};
+
+// ── COMPUTED STATS ────────────────────────────────────────────────────────────
+function getMaxHp()  { return Math.floor(G.baseHp  * getCrewBonus('hp'));  }
+function getAtk()    { return +(G.baseAtk * getCrewBonus('atk')).toFixed(3); }
+function getSpd()    { return Math.min(15, +(G.baseSpd * getCrewBonus('spd')).toFixed(3)); }
+function getZone()   { return ZONES.find(z => z.id === G.zoneId); }
+function getEnemy()  { const z = getZone(); return z ? z.enemies[G.enemyIdx % z.enemies.length] : null; }
+
+function beatenKey(zoneId, idx)    { return `${zoneId}-${idx}`; }
+function getKillCount(zoneId, idx) { return G.beatenEnemies[beatenKey(zoneId, idx)] ?? 0; }
+function isBeaten(zoneId, idx)     { return getKillCount(zoneId, idx) > 0; }
+function isUnlocked(zoneId, idx) {
+  if (idx === 0) return true;
+  for (let i = 0; i < idx; i++) {
+    if (!isBeaten(zoneId, i)) return false;
+  }
+  return true;
+}
+function markBeaten(zoneId, idx, count) {
+  count = count || 1;
+  const key  = beatenKey(zoneId, idx);
+  const prev = G.beatenEnemies[key] ?? 0;
+  G.beatenEnemies[key] = prev + count;
+  if (prev === 0) {
+    const zone  = ZONES.find(z => z.id === zoneId);
+    const enemy = zone?.enemies[idx];
+    if (enemy) {
+      const reward = enemy.pwr * 100;
+      G.bounty += reward;
+      updateBountyDisplay();
+      addLog(`🏴‍☠️ First defeat of ${enemy.name}! +฿${fmtNum(reward)} bounty`, 'log-kill');
+      // Recruit to crew if they have a passive and aren't already recruited
+      if (CREW_PASSIVES[enemy.name] && !G.crewRecruited.includes(enemy.name)) {
+        G.crewRecruited.push(enemy.name);
+        addLog(`🏴‍☠️ ${enemy.name} joined your crew!`, 'log-sys');
+      }
+    }
+  }
+}
+
+// Offline XP/hr = sum of (enemy.xp × killCount) across all beaten enemies
+function calcOfflineXpRate() {
+  let rate = 0;
+  for (const zone of ZONES) {
+    zone.enemies.forEach((e, idx) => {
+      const kills = getKillCount(zone.id, idx);
+      if (kills > 0) rate += e.xp * Math.min(kills, 10);
+    });
+  }
+  return rate * getCrewBonus('offlineXp');
+}
+
+// ── HEALING ──────────────────────────────────────────────────────────────────
+// Flat healing rate, boosted by crew "heal" bonuses and the Heal Speed prestige stat.
+
+function getHealingSpeedPerHour() {
+  return 150;
+}
+
+// Effective healing speed after crew "heal" bonuses and the Heal Speed prestige stat.
+function getEffectiveHealingSpeedPerHour() {
+  const pc = G.prestigeChoices || { xp:0, spd:0, atk:0, hp:0, healspd:0 };
+  return getHealingSpeedPerHour() * getCrewBonus('heal') * Math.pow(1.01, pc.healspd);
+}
+
+// ── XP FORMULA ───────────────────────────────────────────────────────────────
+// XP discount from banked prestige levels: smooth diminishing returns, floors at 10% of normal
+// (never fully free — early picks matter most, later picks give progressively less).
+const XP_DISCOUNT_FLOOR = 0.1;
+const XP_DISCOUNT_K     = 200;
+function xpDiscountMult() {
+  return XP_DISCOUNT_FLOOR + (1 - XP_DISCOUNT_FLOOR) / (1 + G.bankedLevels / XP_DISCOUNT_K);
+}
+function xpNeeded(lv) {
+  return Math.floor(50 * Math.pow(1.15, lv - 1) * xpDiscountMult());
+}
+
+// ── LEVEL UP STAT GAINS (multiplicative per level) ───────────────────────────
+// ATK/HP: base * 1.2^(lv-1) | SPD: base * 1.01^(lv-1), caps at 15
+const BASE_ATK = 2;
+const BASE_HP  = 15;
+const BASE_SPD = 0.2;
+
+function recalcBaseStats() {
+  const multAtk   = Math.pow(1.08, G.lv - 1);
+  const multHp    = Math.pow(1.1,  G.lv - 1);
+  const multSpd   = Math.pow(1.01, G.lv - 1);
+  const pc = G.prestigeChoices || { xp:0, spd:0, atk:0, hp:0, healspd:0 };
+  G.baseAtk = BASE_ATK * multAtk * Math.pow(1.01, pc.atk);
+  G.baseHp  = BASE_HP  * multHp  * Math.pow(1.01, pc.hp);
+  G.baseSpd = Math.min(15, BASE_SPD * multSpd * Math.pow(1.01, pc.spd));
+}
+
+// Returns the effective level required to fight a given enemy, after any per-enemy
+// Level Req debuff (flat -1 per point spent, floored at level 1).
+function effectiveReqLv(enemyLv, zoneId, enemyIdx) {
+  if (zoneId === undefined || enemyIdx === undefined) return Math.max(1, enemyLv);
+  const debuff = getEnemyDebuff(zoneId, enemyIdx);
+  const points = debuff.lvreq || 0;
+  return Math.max(1, enemyLv - points);
+}
+
+// ── COMBAT ENGINE ─────────────────────────────────────────────────────────────
+function spawnEnemy() {
+  const e = G.ambushActive ? G.ambushMarine : getEnemy();
+  if (!e) return;
+  const mult = (!G.ambushActive && G.megaActive && G.megaMultiplier > 1) ? G.megaMultiplier : 1;
+  const baseHp = G.ambushActive ? e.hp : getEffectiveEnemyHp(G.zoneId, G.enemyIdx);
+  G.enemyHp = baseHp * mult;
+  G.enemyMaxHp = G.enemyHp;
+  document.getElementById('combat-enemy-name').textContent = e.name.toUpperCase() + (mult > 1 ? ` (×${mult})` : '');
+  const effAtk = G.ambushActive ? undefined : getEffectiveEnemyAtk(G.zoneId, G.enemyIdx) * getMegaOverwhelmMult(mult);
+  updateEnemyStatsPanel(e, effAtk, mult, baseHp);
+  updateCombatUI();
+}
+
+function toggleEnemyStats() {
+  const panel = document.getElementById('enemy-stats-panel');
+  const toggle = document.getElementById('enemy-stats-toggle');
+  const open = panel.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+function updateEnemyStatsPanel(e, atkOverride, mult, hpOverride) {
+  if (!e) return;
+  mult = mult || 1;
+  const spdEff = e.spd * Math.sqrt(mult);
+  const baseHp = hpOverride !== undefined ? hpOverride : e.hp;
+  document.getElementById('e-stat-hp').textContent   = fmtNum(baseHp * mult);
+  document.getElementById('e-stat-atk').textContent  = fmtNum(atkOverride !== undefined ? atkOverride : e.atk);
+  document.getElementById('e-stat-spd').textContent  = +spdEff.toFixed(3) + '/s';
+  document.getElementById('e-stat-xp').textContent   = fmtNum(e.xp * mult);
+  document.getElementById('e-stat-gold').textContent = fmtNum(e.gold * mult);
+}
+
+function toggleMegaPanel() {
+  G.megaPanelHidden = !G.megaPanelHidden;
+  applyMegaPanelState();
+  saveGame();
+}
+
+function applyMegaPanelState() {
+  const body = document.getElementById('mega-panel-body');
+  const toggle = document.getElementById('mega-panel-toggle');
+  if (!body || !toggle) return;
+  if (G.megaPanelHidden) {
+    body.style.display = 'none';
+    toggle.textContent = '▲ SHOW';
+  } else {
+    body.style.display = '';
+    toggle.textContent = '▼ HIDE';
+  }
+}
+
+function setMegaMultiplier(mult) {
+  if (G.fightRunning) {
+    notify('⛔ Stop the current fight before changing the multiplier.');
+    return;
+  }
+  G.megaMultiplier = mult;
+  document.querySelectorAll('.mega-mult-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.mult, 10) === mult);
+  });
+  // If the current enemy hasn't been engaged yet (no damage dealt), refresh the preview
+  // to reflect the newly selected multiplier.
+  const e = G.ambushActive ? null : getEnemy();
+  if (e) {
+    G.megaActive = mult > 1;
+    spawnEnemy();
+  }
+  updateStatsDisplay();
+  saveGame();
+}
+
+function toggleFight() {
+  if (G.fightRunning) {
+    stopFight();
+  } else {
+    startFight();
+  }
+}
+
+function startFight() {
+  if (G.fightRunning) return;
+  G.fightRunning = true;  // set first so stopHeal doesn't kill masterTick
+  stopHeal();
+  const btn = document.getElementById('fight-btn');
+  btn.textContent = '◼ STOP';
+  btn.classList.remove('primary');
+  btn.classList.add('running');
+  const e = G.ambushActive ? G.ambushMarine : getEnemy();
+  const baseHp = e ? (G.ambushActive ? e.hp : getEffectiveEnemyHp(G.zoneId, G.enemyIdx)) : 0;
+  // A "fresh" enemy is one at full base HP with no mega multiplier locked in yet —
+  // in that case, lock in the currently-selected multiplier for this fight.
+  const isFresh = G.enemyHp <= 0 || (!G.megaActive && e && G.enemyHp >= baseHp);
+  if (isFresh) {
+    G.megaActive = (!G.ambushActive && G.megaMultiplier > 1);
+    spawnEnemy();
+    resetCombatAccumulators();
+  } else {
+    const ename = G.ambushActive ? (G.ambushMarine?.name || '') : (getEnemy()?.name || '');
+    document.getElementById('combat-enemy-name').textContent = (G.ambushActive ? '🚢 ' : '') + ename.toUpperCase();
+    updateCombatUI();
+  }
+  startCombatLoop();
+}
+
+function stopFight() {
+  // Call stopHeal first while fightRunning is still true,
+  // so stopHeal's !fightRunning branch doesn't fire prematurely
+  G.isHealing = false;
+  healAcc = 0;
+  G.fightRunning = false;
+  G.ambushActive  = false;
+  G.ambushPending = false;
+  G.ambushMarine  = null;
+  ambushAcc = 0;
+  stopCombatLoop();
+  const btn = document.getElementById('fight-btn');
+  btn.textContent = '⚔ FIGHT';
+  btn.classList.add('primary');
+  btn.classList.remove('running');
+  document.getElementById('combat-enemy-name').textContent = '— IDLE —';
+  document.getElementById('enemy-hp-bar').style.width = '100%';
+  document.getElementById('enemy-hp-val').textContent = '— / —';
+  updateHealBtn();
+  if (G.playerHp < getMaxHp()) startHeal();
+}
+
+// ── MASTER TICK LOOP (timestamp-based — works when tab is hidden) ─────────────
+// All timers use accumulated elapsed time so they catch up correctly after
+// the browser pauses the tab (screen off, background, etc.)
+
+let masterTick = null;
+let lastTickTime = null;
+
+// Per-entity accumulators (ms since last attack fired)
+// These are reset when a new enemy spawns or fight stops.
+let playerAcc  = 0;  // ms accumulated toward player's next attack
+let enemyAcc   = 0;  // ms accumulated toward enemy's next attack
+let ambushAcc  = 0;  // ms accumulated toward ambush 3s warning firing
+let healAcc    = 0;  // ms accumulated toward next heal tick (10 000 ms)
+
+function stopCombatLoop() {
+  if (masterTick) { clearInterval(masterTick); masterTick = null; }
+  lastTickTime = null;
+}
+
+function startCombatLoop() {
+  stopCombatLoop();
+  lastTickTime = Date.now();
+  masterTick = setInterval(tickAll, 100);
+}
+
+// Reset accumulators when a new enemy spawns so attacks start fresh
+function resetCombatAccumulators() {
+  playerAcc = 0;
+  enemyAcc  = 0;
+}
+
+function tickAll() {
+  const now     = Date.now();
+  const elapsed = now - lastTickTime;   // ms since last tick (may be large if tab was hidden)
+  lastTickTime  = now;
+
+  if (!G.fightRunning && !G.isHealing) return;
+
+  // ── HEAL TICK ──
+  if (G.isHealing && !G.fightRunning) {
+    const healSpeed = getEffectiveHealingSpeedPerHour();
+    const hpPerMs = healSpeed / 3600000;
+    G.playerHp = Math.min(getMaxHp(), G.playerHp + hpPerMs * elapsed);
+    if (G.playerHp >= getMaxHp()) {
+      addLog('💚 Fully healed!', 'log-heal');
+      stopHeal();
+      updateCombatUI();
+      return;
+    }
+    updateCombatUI();
+    return;
+  }
+
+  if (!G.fightRunning) return;
+
+  // ── AMBUSH PENDING COUNTDOWN ──
+  if (G.ambushPending) {
+    ambushAcc += elapsed;
+    if (ambushAcc >= 3000) {
+      ambushAcc = 0;
+      startMarineFight();
+    }
+    return; // freeze combat during warning
+  }
+
+  // ── COMBAT TICK (continuous DPS) ──
+  // Instead of discrete "hits" fired at intervals, damage is applied continuously
+  // based on each side's damage-per-second (atk × spd), scaled by elapsed time.
+  // This keeps total DPS mathematically identical to the old interval model.
+  // Mega fights: your effective speed vs this fight scales by sqrt(N) — a diminishing-returns
+  // efficiency benefit (time-to-kill grows slower than the reward, but isn't fully free).
+  // The enemy's attack speed also scales by sqrt(N) — a real group hits back faster too.
+  {
+    const e = G.ambushActive ? G.ambushMarine : getEnemy();
+    if (!e) { stopFight(); return; }
+
+    const megaMult = (!G.ambushActive && G.megaActive && G.megaMultiplier > 1) ? G.megaMultiplier : 1;
+    const playerDps = getAtk() * getSpd() * Math.sqrt(megaMult);
+    const enemyAtkEff = getEffectiveEnemyAtk(G.zoneId, G.enemyIdx) * getMegaOverwhelmMult(megaMult);
+    const enemySpdEff = e.spd * Math.sqrt(megaMult);
+    const enemyDps = enemyAtkEff * enemySpdEff;
+
+    const elapsedSec = elapsed / 1000;
+    const playerDamageDealt = playerDps * elapsedSec;
+    const enemyDamageDealt  = enemyDps  * elapsedSec;
+
+    G.enemyHp = Math.max(0, G.enemyHp - playerDamageDealt);
+    if (G.fightRunning) {
+      G.playerHp = Math.max(0, G.playerHp - enemyDamageDealt);
+    }
+
+    if (G.enemyHp <= 0) {
+      if (G.ambushActive) {
+        onMarineDefeated();
+      } else {
+        onEnemyKilled(e);
+      }
+      updateCombatUI();
+      return;
+    }
+
+    if (G.playerHp <= 0) {
+      if (G.ambushActive) {
+        onPlayerDiedToMarine();
+      } else {
+        onPlayerDied();
+      }
+      updateCombatUI();
+      return;
+    }
+  }
+
+  updateCombatUI();
+}
+
+function onEnemyKilled(e) {
+  const mult = (!G.ambushActive && G.megaActive && G.megaMultiplier > 1) ? G.megaMultiplier : 1;
+  const kills = getKillCount(G.zoneId, G.enemyIdx); // count before marking
+  // XP is only granted for the portion of the kill-count still under the cap (10).
+  // e.g. at 7/10 kills, a 5x mega-fight only grants XP for kills 8, 9, 10 (3 of the 5).
+  const xpEligibleKills = Math.max(0, Math.min(mult, 10 - kills));
+  const xpGain = xpEligibleKills * e.xp;
+  const goldGain = e.gold * mult;
+  const logXp = xpGain > 0 ? `+${fmtNum(xpGain)} XP ` : '(no XP) ';
+  const megaTag = mult > 1 ? `[×${mult} MEGA] ` : '';
+  addLog(`☠ ${megaTag}${e.name} defeated! ${logXp}+฿${fmtNum(goldGain)}`, 'log-kill');
+  const pc = G.prestigeChoices || { xp:0, spd:0, atk:0, hp:0, healspd:0 };
+  G.gold   += Math.floor(goldGain * getCrewBonus('gold'));
+  G.bounty += Math.floor(goldGain * 0.1);
+  if (xpGain > 0) gainXp(xpGain);
+  markBeaten(G.zoneId, G.enemyIdx, mult);
+  G.megaActive = false;
+  updateBountyDisplay();
+  updateGoldDisplay();
+
+  if (G.fightRunning && rollAmbush()) {
+    triggerAmbushWarning();
+    return;
+  }
+
+  spawnEnemy();
+  resetCombatAccumulators();
+}
+
+function rollAmbush() {
+  if (G.ambushActive || G.ambushPending) return false;
+  const tier = getBountyTier(G.bounty);
+  return tier.ambushChance > 0 && Math.random() < tier.ambushChance;
+}
+
+function triggerAmbushWarning() {
+  G.ambushPending = true;
+  ambushAcc = 0;
+  const marine = getMarineStats(G.bounty);
+  G.ambushMarine = marine;
+  G.savedEnemyHp = G.enemyHp;
+  addLog(`⚠ MARINE AMBUSH! ${marine.name} incoming...`, 'log-sys');
+  notify(`⚠ MARINE AMBUSH! ${marine.name} — 3 seconds!`);
+  document.getElementById('combat-enemy-name').textContent = `⚠ ${marine.name.toUpperCase()} INCOMING`;
+}
+
+function startMarineFight() {
+  G.ambushPending = false;
+  G.ambushActive  = true;
+  const marine = G.ambushMarine;
+  G.enemyHp = marine.hp;
+  G.enemyMaxHp = marine.hp;
+  document.getElementById('combat-enemy-name').textContent = `🚢 ${marine.name.toUpperCase()}`;
+  addLog(`🚢 ${marine.name} attacks! HP:${fmtNum(marine.hp)} ATK:${fmtNum(marine.atk)} SPD:${marine.spd}/s`, 'log-sys');
+  updateEnemyStatsPanel(marine);
+  updateCombatUI();
+  resetCombatAccumulators();
+}
+
+function onMarineDefeated() {
+  const marine = G.ambushMarine;
+  addLog(`⚓ Marine defeated! +${fmtNum(marine.xp)} XP +฿${fmtNum(marine.gold)}`, 'log-kill');
+  G.gold   += marine.gold;
+  G.bounty += Math.floor(marine.gold * 0.2);
+  gainXp(marine.xp);
+  G.ambushActive = false;
+  G.ambushMarine = null;
+  updateBountyDisplay();
+  updateGoldDisplay();
+  notify(`✅ Marine defeated! Bounty grew!`);
+  // restore previous enemy
+  spawnEnemy();
+  G.enemyHp = G.savedEnemyHp;
+  updateCombatUI();
+  resetCombatAccumulators();
+}
+
+function onPlayerDiedToMarine() {
+  const cut = Math.floor(G.bounty * 0.3);
+  G.bounty = Math.max(0, G.bounty - cut);
+  addLog(`💀 Defeated by ${G.ambushMarine.name}! Bounty cut by ฿${fmtNum(cut)}!`, 'log-sys');
+  notify(`💀 Bounty cut by 30%! Now ฿${fmtNum(G.bounty)}`);
+  G.ambushActive = false;
+  G.ambushMarine = null;
+  updateBountyDisplay();
+  stopFight();
+  updateCombatUI();
+  startHeal();
+}
+
+function onPlayerDied() {
+  addLog(`💀 You were defeated! Healing up...`, 'log-sys');
+  stopFight();
+  updateCombatUI();
+  startHeal();
+}
+
+function gainXp(amount) {
+  G.xp += Math.floor(amount * getCrewBonus('xp'));
+  let needed = xpNeeded(G.lv);
+  while (G.xp >= needed) {
+    G.xp -= needed;
+    G.lv++;
+    recalcBaseStats();
+    needed = xpNeeded(G.lv);
+    addLog(`⬆ LEVEL UP! Now level ${G.lv}`, 'log-lvl');
+    updateStatsDisplay();
+  }
+  updateXpBar();
+  updateHdrLv();
+  saveGame();
+}
+
+// ── HEAL ─────────────────────────────────────────────────────────────────────
+// Heal runs inside the master tick (tickAll). These functions just manage state.
+function startHeal() {
+  if (G.isHealing || G.fightRunning) return;
+  if (G.playerHp >= getMaxHp()) return;
+  G.isHealing = true;
+  healAcc = 0;
+  addLog('💊 Healing...', 'log-heal');
+  // Start master tick to drive healing
+  if (!masterTick) {
+    lastTickTime = Date.now();
+    masterTick = setInterval(tickAll, 100);
+  }
+  updateHealBtn();
+}
+
+function stopHeal() {
+  G.isHealing = false;
+  healAcc = 0;
+  // Stop master tick if not fighting either
+  if (!G.fightRunning) {
+    stopCombatLoop();
+  }
+  updateHealBtn();
+}
+
+function manualHeal() {
+  if (G.fightRunning) return;
+  if (G.isHealing) { stopHeal(); return; }
+  const maxHp = getMaxHp();
+  if (G.playerHp >= maxHp) return;
+  startHeal();
+}
+
+function updateHealBtn() {
+  const btn = document.getElementById('heal-btn');
+  if (!btn) return;
+  const needsHeal = G.playerHp < getMaxHp();
+  const canStart = !G.fightRunning && needsHeal && !G.isHealing;
+  const healing = G.isHealing;
+  btn.disabled = G.fightRunning || !needsHeal;
+  btn.textContent = healing ? '⏹ STOP HEAL' : '💊 HEAL';
+  btn.style.borderColor = healing ? 'var(--orange)' : (canStart ? 'var(--green)' : '');
+  btn.style.color = healing ? 'var(--orange)' : (canStart ? 'var(--green)' : '');
+}
+
+// ── SHOP ──────────────────────────────────────────────────────────────────────
+// ── OFFLINE OVERLAY TICKER ────────────────────────────────────────────────────
+let offlineTicker = null;
+
+function startOfflineTicker() {
+  stopOfflineTicker();
+  offlineTicker = setInterval(updateOverlayStats, 1000);
+  updateOverlayStats();
+}
+
+function stopOfflineTicker() {
+  if (offlineTicker) { clearInterval(offlineTicker); offlineTicker = null; }
+}
+
+function updateOverlayStats() {
+  if (!G.offlineMode || !G.offlineStart) return;
+  const elapsedSec = (Date.now() - G.offlineStart) / 1000;
+  const hrs  = Math.floor(elapsedSec / 3600);
+  const mins = Math.floor((elapsedSec % 3600) / 60);
+  const secs = Math.floor(elapsedSec % 60);
+  const timeStr = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
+
+  const zone  = ZONES.find(z => z.id === G.zoneId);
+  const enemy = zone ? zone.enemies[G.enemyIdx % zone.enemies.length] : null;
+  const xpEarned = Math.floor(calcOfflineXpRate() * (elapsedSec / 3600) * OFFLINE_EFF);
+
+  // Project level gains from *current* G.xp (not already applied)
+  let simLv = G.lv, simXp = G.xp + xpEarned, levGained = 0;
+  let needed = xpNeeded(simLv);
+  while (simXp >= needed) { simXp -= needed; simLv++; levGained++; needed = xpNeeded(simLv); }
+
+  document.getElementById('ov-time').textContent   = timeStr;
+  document.getElementById('ov-xp').textContent     = fmtNum(xpEarned);
+  document.getElementById('ov-levels').textContent = levGained > 0 ? `+${levGained}` : '0';
+}
+
+// frozen: pass already-applied result when showing overlay after a reload
+function showOfflineOverlay(frozen) {
+  const zone  = ZONES.find(z => z.id === G.zoneId);
+  const enemy = zone ? zone.enemies[G.enemyIdx % zone.enemies.length] : null;
+  const totalRate = fmtNum(Math.floor(calcOfflineXpRate() * OFFLINE_EFF));
+  document.getElementById('ov-enemy').textContent =
+    calcOfflineXpRate() > 0 ? `TOTAL RATE: ${totalRate} XP/HR` : '— NO ENEMIES BEATEN YET —';
+  document.getElementById('offline-overlay').classList.add('active');
+
+  if (frozen) {
+    // XP already applied — show static summary, no live ticker
+    const totalSec = frozen.elapsedSec || 0;
+    const hrs  = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = Math.floor(totalSec % 60);
+    const timeStr = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
+    document.getElementById('ov-time').textContent   = timeStr;
+    document.getElementById('ov-xp').textContent     = fmtNum(frozen.xp || 0);
+    document.getElementById('ov-levels').textContent = frozen.levels > 0 ? `+${frozen.levels}` : '0';
+  } else {
+    startOfflineTicker();
+  }
+}
+
+function hideOfflineOverlay() {
+  document.getElementById('offline-overlay').classList.remove('active');
+  stopOfflineTicker();
+}
+
+function applyOfflineXp(offlineStart) {
+  if (!offlineStart) return null;
+  const elapsedSec = Math.max(0, (Date.now() - offlineStart) / 1000);
+  if (elapsedSec < 5) return null;
+
+  const totalXp = Math.floor(calcOfflineXpRate() * (elapsedSec / 3600) * OFFLINE_EFF);
+  if (totalXp <= 0) return null;
+
+  let levelsGained = 0;
+  G.xp += totalXp;
+  let needed = xpNeeded(G.lv);
+  while (G.xp >= needed) {
+    G.xp -= needed;
+    G.lv++;
+    levelsGained++;
+    recalcBaseStats();
+    needed = xpNeeded(G.lv);
+  }
+  G.playerHp = Math.min(G.playerHp, getMaxHp());
+  updateXpBar();
+  updateHdrLv();
+  updateStatsDisplay();
+  return { xp: totalXp, levels: levelsGained, elapsedSec };
+}
+
+function toggleOfflineMode() {
+  G.offlineMode = !G.offlineMode;
+  if (G.offlineMode) {
+    G.offlineStart = Date.now();
+    stopFight();
+    G.isHealing = false;
+    healAcc = 0;
+    // Keep the loop running so passive healing can still tick
+    if (!masterTick) startCombatLoop();
+    addLog('☾ Offline mode ON — XP accruing passively.', 'log-sys');
+    showOfflineOverlay();
+  } else {
+    // Apply XP earned since offline mode was activated
+    const result = applyOfflineXp(G.offlineStart);
+    G.offlineStart = null;
+    hideOfflineOverlay();
+    if (result) {
+      const parts = [`+${fmtNum(result.xp)} XP`];
+      if (result.levels > 0) parts.push(`+${result.levels} lvl`);
+      addLog(`☀ Back online — ${parts.join(' — ')}`, 'log-sys');
+    } else {
+      addLog('☀ Offline mode OFF — back to active play.', 'log-sys');
+    }
+    if (G.playerHp < getMaxHp()) startHeal();
+  }
+  saveGame();
+  updateOfflineBtn();
+  updateHealBtn();
+}
+
+function updateOfflineBtn() {
+  const btn = document.getElementById('idle-btn');
+  if (!btn) return;
+  if (G.offlineMode) {
+    btn.textContent = '☾ OFFLINE MODE: ON';
+    btn.style.borderColor = 'var(--orange)';
+    btn.style.color = 'var(--orange)';
+    btn.style.background = 'rgba(255,160,0,0.08)';
+  } else {
+    btn.textContent = '☾ OFFLINE MODE: OFF';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.style.background = '';
+  }
+}
+
+// ── ZONES ─────────────────────────────────────────────────────────────────────
+function applyRiftColor(hex) {
+  if (!hex) return;
+  document.documentElement.style.setProperty('--rift', hex);
+  // build a dim translucent version for glow/background accents
+  const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+  document.documentElement.style.setProperty('--rift-dim', `rgba(${r},${g},${b},0.15)`);
+}
+function selectEnemy(zoneId, idx) {
+  const zone = ZONES.find(z => z.id === zoneId);
+  const enemy = zone?.enemies[idx];
+  if (enemy && G.lv < effectiveReqLv(enemy.lv, zoneId, idx)) {
+    notify(`⛔ Lv ${effectiveReqLv(enemy.lv, zoneId, idx)} required to fight ${enemy.name}!`);
+    return;
+  }
+  if (!isUnlocked(zoneId, idx)) {
+    const prev = zone?.enemies[idx - 1];
+    notify(`⛔ Defeat ${prev?.name || 'the previous enemy'} first!`);
+    return;
+  }
+  G.zoneId = zoneId;
+  G.enemyIdx = idx;
+  G.megaActive = (!G.ambushActive && G.megaMultiplier > 1);
+  document.getElementById('combat-zone-name').textContent = zone ? zone.name : '';
+  applyRiftColor(zone ? zone.color : null);
+  if (G.fightRunning) { stopFight(); startFight(); }
+  else spawnEnemy();
+  renderZones();
+  switchPage('fight', document.querySelector('[data-page="fight"]'));
+  saveGame();
+}
+
+function renderZones() {
+  const wrap = document.getElementById('zone-list');
+  wrap.innerHTML = '';
+
+  ZONES.forEach(zone => {
+    const isActiveZone = zone.id === G.zoneId;
+    const effRecLv = effectiveReqLv(zone.recLv, zone.id, 0);
+    const comfortable = G.lv >= effRecLv;
+
+    let badgeClass = 'locked', badgeText = 'HARD';
+    if (isActiveZone) { badgeClass = 'current'; badgeText = 'ACTIVE'; }
+    else if (comfortable) { badgeClass = 'unlocked'; badgeText = 'OK'; }
+    else if (G.lv >= effRecLv * 0.5) { badgeClass = 'tough'; badgeText = 'TOUGH'; }
+
+    // Zone header card
+    const zoneCard = document.createElement('div');
+    zoneCard.className = 'zone-card' + (isActiveZone ? ' active-zone' : '');
+    zoneCard.style.borderLeft = `3px solid ${zone.color}`;
+
+    const zoneHeader = document.createElement('div');
+    zoneHeader.className = 'zone-header';
+    zoneHeader.innerHTML = `
+      <div class="zone-icon">${zone.icon}</div>
+      <div class="zone-info">
+        <div class="zone-name" style="color:${zone.color}">${zone.name}</div>
+        <div class="zone-sub">Rec. lv ${fmtLevel(effRecLv)} · ${zone.enemies.length} enemies</div>
+      </div>
+      <div class="zone-badge ${badgeClass}">${badgeText}</div>`;
+    zoneCard.appendChild(zoneHeader);
+
+    // Enemy list inside zone card
+    zone.enemies.forEach((e, idx) => {
+      const isActiveEnemy = isActiveZone && G.enemyIdx === idx;
+      const row = document.createElement('div');
+      row.className = 'enemy-row';
+
+      const reqLv = effectiveReqLv(e.lv, zone.id, idx);
+      const isLocked  = !isUnlocked(zone.id, idx) || G.lv < reqLv;
+      const beaten    = isBeaten(zone.id, idx);
+      const isTarget  = isActiveEnemy && !beaten;
+
+      let btnClass, btnLabel, btnDisabled;
+      if (isActiveEnemy && !beaten) {
+        btnClass = 'active'; btnLabel = '▶ TARGET'; btnDisabled = false;
+      } else if (beaten && isActiveEnemy) {
+        btnClass = 'beaten'; btnLabel = '▶ GRINDING'; btnDisabled = false;
+      } else if (beaten) {
+        btnClass = 'beaten'; btnLabel = '✓ BEATEN'; btnDisabled = false;
+      } else if (isLocked) {
+        btnClass = 'locked'; btnLabel = G.lv < reqLv ? `LV ${fmtLevel(reqLv)}` : '🔒 LOCKED'; btnDisabled = true;
+      } else {
+        btnClass = 'can-select'; btnLabel = 'SELECT'; btnDisabled = false;
+      }
+
+      const nameColor  = isActiveEnemy ? 'var(--gold)' : beaten ? 'var(--green)' : isLocked ? 'var(--muted)' : '';
+      const lvColor    = G.lv < reqLv ? 'var(--red)' : beaten ? 'var(--green)' : '';
+      const lvSuffix   = G.lv < reqLv ? ' 🔒' : beaten ? ' ✓' : '';
+
+      const header = document.createElement('div');
+      header.className = 'enemy-row-header';
+      header.innerHTML = `
+        <div class="enemy-num">${idx + 1}.</div>
+        <div class="enemy-name-wrap">
+          <div class="enemy-name"${nameColor ? ` style="color:${nameColor}"` : ''}>${isLocked && !beaten ? (isBeaten(zone.id, idx-1) ? e.name : '???') : e.name}</div>
+          <div class="enemy-lv"${lvColor ? ` style="color:${lvColor}"` : ''}>Lv ${fmtLevel(reqLv)}${lvSuffix}</div>
+        </div>
+        <button class="enemy-select-btn ${btnClass}"
+          onclick="event.stopPropagation();selectEnemy('${zone.id}',${idx})"
+          ${btnDisabled ? 'disabled' : ''}>
+          ${btnLabel}
+        </button>
+        <div class="enemy-toggle" id="etoggle-${zone.id}-${idx}">▼</div>`;
+
+      const statsPanel = document.createElement('div');
+      statsPanel.className = 'enemy-stats-panel';
+      statsPanel.id = `estats-${zone.id}-${idx}`;
+      const kills = getKillCount(zone.id, idx);
+      statsPanel.innerHTML = `
+        <div class="enemy-stat-row">
+          <div class="enemy-stat-item">HP <b>${fmtNum(getEffectiveEnemyHp(zone.id, idx))}</b></div>
+          <div class="enemy-stat-item">ATK <b>${fmtNum(getEffectiveEnemyAtk(zone.id, idx))}</b></div>
+          <div class="enemy-stat-item">SPD <b>${e.spd}/s</b></div>
+          <div class="enemy-stat-item">XP <b>${fmtNum(e.xp)}</b></div>
+          <div class="enemy-stat-item">฿ <b>${fmtNum(e.gold)}</b></div>
+          <div class="enemy-stat-item">Kills <b>${fmtNum(kills)}</b></div>
+          ${kills > 0 ? `<div class="enemy-stat-item" style="color:var(--orange)">⏱ +${fmtNum(e.xp * kills)} XP/HR</div>` : ''}
+        </div>`;
+
+      header.addEventListener('click', (ev) => {
+        if (ev.target.classList.contains('enemy-select-btn')) return;
+        const panel = document.getElementById(`estats-${zone.id}-${idx}`);
+        const toggle = document.getElementById(`etoggle-${zone.id}-${idx}`);
+        const isOpen = panel.classList.toggle('open');
+        toggle.classList.toggle('open', isOpen);
+      });
+
+      row.appendChild(header);
+      row.appendChild(statsPanel);
+      zoneCard.appendChild(row);
+    });
+
+    wrap.appendChild(zoneCard);
+  });
+}
+
+// ── UI UPDATES ────────────────────────────────────────────────────────────────
+function updateCombatUI() {
+  const maxHp = getMaxHp();
+  const e = getEnemy();
+  const eMaxHp = (G.enemyMaxHp && G.enemyMaxHp > 0) ? G.enemyMaxHp : (e ? getEffectiveEnemyHp(G.zoneId, G.enemyIdx) : 1);
+
+  document.getElementById('player-hp-bar').style.width = (G.playerHp / maxHp * 100) + '%';
+  const hpPct = Math.floor(G.playerHp / maxHp * 100);
+  document.getElementById('player-hp-val').textContent = Math.ceil(G.playerHp) + ' / ' + maxHp + ' (' + hpPct + '%)';
+
+  if (G.enemyHp > 0 && e) {
+    document.getElementById('enemy-hp-bar').style.width = (G.enemyHp / eMaxHp * 100) + '%';
+    const eHpPct = Math.floor(G.enemyHp / eMaxHp * 100);
+    document.getElementById('enemy-hp-val').textContent = fmtNum(Math.ceil(G.enemyHp)) + ' / ' + fmtNum(eMaxHp) + ' (' + eHpPct + '%)';
+  }
+}
+
+function updateStatsDisplay() {
+  document.getElementById('disp-atk').textContent = fmtNum(getAtk());
+  document.getElementById('disp-hp').textContent  = fmtNum(getMaxHp());
+  document.getElementById('disp-spd').textContent = getSpd().toFixed(2);
+  document.getElementById('disp-healspd').textContent = fmtNum(Math.floor(getEffectiveHealingSpeedPerHour()));
+}
+
+function updateXpBar() {
+  const needed = xpNeeded(G.lv);
+  document.getElementById('xp-bar').style.width = (G.xp / needed * 100) + '%';
+  document.getElementById('xp-label').textContent = `XP: ${fmtNum(G.xp)} / ${fmtNum(needed)}`;
+}
+
+function updateHpBar() {
+  const maxHp = getMaxHp();
+  document.getElementById('player-hp-bar').style.width = (G.playerHp / maxHp * 100) + '%';
+}
+
+function updateHdrLv() {
+  document.getElementById('hdr-lv').textContent = G.lv;
+}
+
+function updateGoldDisplay() {
+  document.getElementById('hdr-gold').textContent = fmtNum(G.gold);
+}
+
+function updateBountyDisplay() {
+  const tier = getBountyTier(G.bounty);
+  document.getElementById('hdr-bounty').textContent = '฿' + fmtNum(G.bounty);
+  document.getElementById('hdr-bounty').style.color = tier.color;
+  const pill = document.getElementById('bounty-pill');
+  if (pill) pill.title = tier.name;
+  // show tier name in combat zone area subtitle if visible
+  const tierEl = document.getElementById('bounty-tier-name');
+  if (tierEl) { tierEl.textContent = tier.name; tierEl.style.color = tier.color; }
+}
+
+function renderCrew() {
+  const wrap = document.getElementById('crew-list');
+  if (!wrap) return;
+  const BONUS_LABELS = { xp:'XP', gold:'Gold', atk:'ATK', spd:'SPD', hp:'HP', offlineXp:'Offline XP', heal:'Heal Speed' };
+  const active = G.prestigeCount >= 1;
+
+  // Build name → {zone, lv} lookup from ZONES data
+  const enemyInfo = {};
+  for (const zone of ZONES) {
+    zone.enemies.forEach(e => {
+      if (!enemyInfo[e.name]) enemyInfo[e.name] = { zone: zone.name, lv: e.lv };
+    });
+  }
+
+  wrap.innerHTML = '';
+  for (const [name, p] of Object.entries(CREW_PASSIVES)) {
+    const recruited = G.crewRecruited.includes(name);
+    const info = enemyInfo[name];
+    const card = document.createElement('div');
+    card.className = `crew-card${recruited ? ' active' : ' locked'}`;
+    const bonusStr = `+${Math.round(p.value * 100)}% ${BONUS_LABELS[p.type]}`;
+    const statusStr = !recruited ? '???' : !active ? '(next run)' : bonusStr;
+    const locationStr = info ? `${info.zone} · Lv ${fmtLevel(info.lv)}` : '';
+    card.innerHTML = `
+      <div class="crew-icon">${recruited ? p.icon : '❓'}</div>
+      <div class="crew-info">
+        <div class="crew-name">${recruited ? name : '???'}</div>
+        <div class="crew-flavour">${recruited ? p.flavour : 'Defeat this enemy to recruit'}</div>
+        ${locationStr ? `<div class="crew-flavour" style="color:var(--border2);margin-top:1px;">${locationStr}</div>` : ''}
+      </div>
+      <div class="crew-bonus" style="${recruited && active ? 'color:var(--orange)' : 'color:var(--muted)'}">${statusStr}</div>`;
+    wrap.appendChild(card);
+  }
+}
+
+function renderWeaken() {
+  const wrap = document.getElementById('weaken-list');
+  if (!wrap) return;
+  document.getElementById('weaken-pool').textContent = G.weakenPoints || 0;
+  wrap.innerHTML = '';
+
+  ZONES.forEach(zone => {
+    const zoneGroup = document.createElement('div');
+    zoneGroup.className = 'zone-card';
+    zoneGroup.style.borderLeft = `3px solid ${zone.color}`;
+    zoneGroup.style.marginBottom = '8px';
+
+    const header = document.createElement('div');
+    header.className = 'weaken-zone-header';
+    header.innerHTML = `
+      <span class="wz-icon">${zone.icon}</span>
+      <span class="wz-name" style="color:${zone.color}">${zone.name}</span>
+      <span class="wz-toggle" id="wztoggle-${zone.id}">▼</span>`;
+    header.onclick = () => toggleWeakenZone(zone.id);
+    zoneGroup.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'weaken-zone-body';
+    body.id = `wzbody-${zone.id}`;
+
+    zone.enemies.forEach((e, idx) => {
+      const effAtk = getEffectiveEnemyAtk(zone.id, idx);
+      const effHp = getEffectiveEnemyHp(zone.id, idx);
+      const debuff = getEnemyDebuff(zone.id, idx);
+      const atkPoints = debuff.atk || 0;
+      const hpPoints = debuff.hp || 0;
+      const row = document.createElement('div');
+      row.className = 'weaken-enemy-row';
+      row.innerHTML = `
+        <div class="weaken-enemy-info">
+          <div class="weaken-enemy-name">${e.name} <span style="color:var(--border2)">Lv ${fmtLevel(e.lv)}</span></div>
+          <div class="weaken-enemy-atk">ATK: <span class="${atkPoints > 0 ? 'reduced' : ''}">${fmtNum(effAtk)}</span>${atkPoints > 0 ? ` <span style="color:var(--border2)">(orig ${fmtNum(e.atk)}, -${atkPoints}pt)</span>` : ''}</div>
+          <div class="weaken-enemy-atk">HP: <span class="${hpPoints > 0 ? 'reduced' : ''}">${fmtNum(effHp)}</span>${hpPoints > 0 ? ` <span style="color:var(--border2)">(orig ${fmtNum(e.hp)}, -${hpPoints}pt)</span>` : ''}</div>
+        </div>
+        <select class="alloc-input" id="wk-stat-${zone.id}-${idx}" style="width:52px;padding:4px 2px;">
+          <option value="atk">ATK</option>
+          <option value="hp">HP</option>
+        </select>
+        <span class="alloc-stepper">
+          <button class="alloc-btn" onclick="weakenStepInput('${zone.id}',${idx},-1)">−</button>
+          <input class="alloc-input" id="wk-${zone.id}-${idx}" type="number" min="0" value="0" style="width:36px;">
+          <button class="alloc-btn" onclick="weakenStepInput('${zone.id}',${idx},1)">+</button>
+        </span>
+        <button class="alloc-btn" style="width:auto;padding:0 8px;color:var(--gold);border-color:var(--gold2);" onclick="spendWeaken('${zone.id}',${idx})">✓</button>`;
+      body.appendChild(row);
+    });
+
+    zoneGroup.appendChild(body);
+    wrap.appendChild(zoneGroup);
+  });
+}
+
+function toggleWeakenZone(zoneId) {
+  const body = document.getElementById(`wzbody-${zoneId}`);
+  const toggle = document.getElementById(`wztoggle-${zoneId}`);
+  const open = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+function weakenStepInput(zoneId, idx, delta) {
+  const el = document.getElementById(`wk-${zoneId}-${idx}`);
+  let v = parseInt(el.value, 10) || 0;
+  v = Math.max(0, Math.min(v + delta, G.weakenPoints || 0));
+  el.value = v;
+}
+
+function spendWeaken(zoneId, idx) {
+  const el = document.getElementById(`wk-${zoneId}-${idx}`);
+  const statEl = document.getElementById(`wk-stat-${zoneId}-${idx}`);
+  const stat = statEl && statEl.value === 'hp' ? 'hp' : 'atk';
+  const amount = Math.max(0, parseInt(el.value, 10) || 0);
+  if (amount <= 0) return;
+  if (amount > (G.weakenPoints || 0)) {
+    notify('⛔ Not enough weaken points.');
+    return;
+  }
+  const actualSpent = weakenEnemy(zoneId, idx, amount, stat);
+  const statLabel = stat === 'hp' ? 'HP' : 'attack';
+  const capLabel = stat === 'hp' ? 'minimum HP' : 'minimum attack';
+  if (actualSpent > 0 && actualSpent === amount) {
+    notify(`💢 Weakened ${statLabel} for ${actualSpent} point${actualSpent > 1 ? 's' : ''}.`);
+  } else if (actualSpent > 0) {
+    notify(`💢 Weakened ${statLabel} for ${actualSpent}/${amount} points (hit ${capLabel}).`);
+  } else {
+    notify(`⛔ That enemy is already at ${capLabel}.`);
+  }
+  el.value = 0;
+  renderWeaken();
+}
+
+function renderLvReq() {
+  const wrap = document.getElementById('lvreq-list');
+  if (!wrap) return;
+  document.getElementById('lvreq-pool').textContent = G.prestigePoints || 0;
+  wrap.innerHTML = '';
+
+  ZONES.forEach(zone => {
+    const zoneGroup = document.createElement('div');
+    zoneGroup.className = 'zone-card';
+    zoneGroup.style.borderLeft = `3px solid ${zone.color}`;
+    zoneGroup.style.marginBottom = '8px';
+
+    const header = document.createElement('div');
+    header.className = 'weaken-zone-header';
+    header.innerHTML = `
+      <span class="wz-icon">${zone.icon}</span>
+      <span class="wz-name" style="color:${zone.color}">${zone.name}</span>
+      <span class="wz-toggle" id="lqtoggle-${zone.id}">▼</span>`;
+    header.onclick = () => toggleLvReqZone(zone.id);
+    zoneGroup.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'weaken-zone-body';
+    body.id = `lqbody-${zone.id}`;
+
+    zone.enemies.forEach((e, idx) => {
+      const reqLv = effectiveReqLv(e.lv, zone.id, idx);
+      const debuff = getEnemyDebuff(zone.id, idx);
+      const lvreqPoints = debuff.lvreq || 0;
+      const row = document.createElement('div');
+      row.className = 'weaken-enemy-row';
+      row.innerHTML = `
+        <div class="weaken-enemy-info">
+          <div class="weaken-enemy-name">${e.name} <span style="color:var(--border2)">Lv ${fmtLevel(e.lv)}</span></div>
+          <div class="weaken-enemy-atk">REQ: <span class="${lvreqPoints > 0 ? 'reduced' : ''}">Lv ${fmtLevel(reqLv)}</span>${lvreqPoints > 0 ? ` <span style="color:var(--border2)">(orig Lv ${fmtLevel(e.lv)}, -${lvreqPoints}pt)</span>` : ''}</div>
+        </div>
+        <span class="alloc-stepper">
+          <button class="alloc-btn" onclick="lvReqStepInput('${zone.id}',${idx},-1)">−</button>
+          <input class="alloc-input" id="lq-${zone.id}-${idx}" type="number" min="0" value="0" style="width:36px;">
+          <button class="alloc-btn" onclick="lvReqStepInput('${zone.id}',${idx},1)">+</button>
+        </span>
+        <button class="alloc-btn" style="width:auto;padding:0 8px;color:var(--gold);border-color:var(--gold2);" onclick="spendLvReq('${zone.id}',${idx})">✓</button>`;
+      body.appendChild(row);
+    });
+
+    zoneGroup.appendChild(body);
+    wrap.appendChild(zoneGroup);
+  });
+}
+
+function toggleLvReqZone(zoneId) {
+  const body = document.getElementById(`lqbody-${zoneId}`);
+  const toggle = document.getElementById(`lqtoggle-${zoneId}`);
+  const open = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+function lvReqStepInput(zoneId, idx, delta) {
+  const el = document.getElementById(`lq-${zoneId}-${idx}`);
+  let v = parseInt(el.value, 10) || 0;
+  v = Math.max(0, Math.min(v + delta, G.prestigePoints || 0));
+  el.value = v;
+}
+
+function spendLvReq(zoneId, idx) {
+  const el = document.getElementById(`lq-${zoneId}-${idx}`);
+  const amount = Math.max(0, parseInt(el.value, 10) || 0);
+  if (amount <= 0) return;
+  if (amount > (G.prestigePoints || 0)) {
+    notify('⛔ Not enough points.');
+    return;
+  }
+  const actualSpent = lowerEnemyLvReq(zoneId, idx, amount);
+  if (actualSpent > 0 && actualSpent === amount) {
+    notify(`🔓 Lowered level requirement by ${actualSpent} point${actualSpent > 1 ? 's' : ''}.`);
+  } else if (actualSpent > 0) {
+    notify(`🔓 Lowered by ${actualSpent}/${amount} points (hit level 1 floor).`);
+  } else {
+    notify('⛔ That enemy is already at the level 1 floor.');
+  }
+  el.value = 0;
+  renderLvReq();
+}
+
+function updatePrestigePage() {
+  const currentMult = xpDiscountMult();
+  const nextBanked  = G.bankedLevels + (G.lv - 1);
+  const nextMult    = XP_DISCOUNT_FLOOR + (1 - XP_DISCOUNT_FLOOR) / (1 + nextBanked / XP_DISCOUNT_K);
+  const pc = G.prestigeChoices || { xp:0, spd:0, atk:0, hp:0, healspd:0 };
+  document.getElementById('pre-lv').textContent     = G.lv;
+  document.getElementById('pre-count').textContent  = G.prestigeCount;
+  document.getElementById('pre-points').textContent = G.prestigePoints || 0;
+  document.getElementById('pre-weaken-points').textContent = G.weakenPoints || 0;
+  document.getElementById('pre-banked').textContent = G.bankedLevels;
+  document.getElementById('pre-xpmult').textContent = currentMult.toFixed(4) + '×';
+  document.getElementById('pre-next').textContent   = nextMult.toFixed(4) + '× (if you prestige now)';
+  document.getElementById('pre-spd-bonus').textContent  = '×' + Math.pow(1.01, pc.spd).toFixed(4)  + ` (${pc.spd} picks)`;
+  document.getElementById('pre-atk-bonus').textContent  = '×' + Math.pow(1.01, pc.atk).toFixed(4)  + ` (${pc.atk} picks)`;
+  document.getElementById('pre-hp-bonus').textContent   = '×' + Math.pow(1.01, pc.hp).toFixed(4)   + ` (${pc.hp} picks)`;
+  document.getElementById('pre-healspd-bonus').textContent = '×' + Math.pow(1.01, pc.healspd).toFixed(4) + ` (${pc.healspd} picks)`;
+  document.getElementById('hdr-pre').textContent = G.prestigeCount;
+}
+
+function updateAll() {
+  updateStatsDisplay();
+  updateCombatUI();
+  updateXpBar();
+  updateHdrLv();
+  updateGoldDisplay();
+  updatePrestigePage();
+  updateHealBtn();
+  updateOfflineBtn();
+  document.querySelectorAll('.mega-mult-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.mult, 10) === (G.megaMultiplier || 1));
+  });
+  applyMegaPanelState();
+  document.getElementById('combat-zone-name').textContent = getZone()?.name || 'Unknown';
+  updateBountyDisplay();
+  renderZones();
+}
+
+// ── PRESTIGE ──────────────────────────────────────────────────────────────────
+function openPrestigeModal() {
+  const levelsToBank = G.lv - 1;
+  const weakenPointsPreview = prestigePointsForLevels(levelsToBank);
+  document.getElementById('prestige-modal-sub').textContent = 'Choose how to bank your levels';
+  document.getElementById('prestige-normal-btn').textContent = `✓ STATS: +${fmtNum(levelsToBank)} points`;
+  document.getElementById('prestige-weaken-btn').textContent = `💢 WEAKEN: +${fmtNum(weakenPointsPreview)} points`;
+  document.getElementById('prestige-modal-overlay').classList.add('open');
+}
+
+function closePrestigeModal() {
+  document.getElementById('prestige-modal-overlay').classList.remove('open');
+}
+
+function openAllocateModal() {
+  const stats = ['xp','spd','atk','hp','healspd'];
+  for (const s of stats) {
+    const el = document.getElementById('alloc-' + s);
+    if (el) el.value = 0;
+  }
+  document.getElementById('alloc-pool').textContent = G.prestigePoints || 0;
+  updateAllocConfirmState();
+  document.getElementById('allocate-modal-overlay').classList.add('open');
+}
+
+function closeAllocateModal() {
+  document.getElementById('allocate-modal-overlay').classList.remove('open');
+}
+
+function allocStep(stat, delta) {
+  const el = document.getElementById('alloc-' + stat);
+  let v = parseInt(el.value, 10) || 0;
+  v = Math.max(0, v + delta);
+  el.value = v;
+  allocClamp(stat);
+}
+
+function getAllocTotal() {
+  const stats = ['xp','spd','atk','hp','healspd'];
+  return stats.reduce((sum, s) => sum + (parseInt(document.getElementById('alloc-' + s).value, 10) || 0), 0);
+}
+
+function allocClamp(changedStat) {
+  const pool = G.prestigePoints || 0;
+  let total = getAllocTotal();
+  if (total > pool) {
+    // clamp the just-edited field down so total never exceeds the pool
+    const el = document.getElementById('alloc-' + changedStat);
+    let v = parseInt(el.value, 10) || 0;
+    const otherTotal = total - v;
+    v = Math.max(0, pool - otherTotal);
+    el.value = v;
+  }
+  updateAllocConfirmState();
+}
+
+function updateAllocConfirmState() {
+  const total = getAllocTotal();
+  const pool = G.prestigePoints || 0;
+  const btn = document.getElementById('alloc-confirm-btn');
+  btn.disabled = total <= 0 || total > pool;
+  document.getElementById('alloc-pool').textContent = (pool - total) + ' / ' + pool;
+}
+
+function confirmAllocation() {
+  const stats = ['xp','spd','atk','hp','healspd'];
+  const amounts = {};
+  let total = 0;
+  for (const s of stats) {
+    const v = Math.max(0, parseInt(document.getElementById('alloc-' + s).value, 10) || 0);
+    amounts[s] = v;
+    total += v;
+  }
+  if (total <= 0 || total > (G.prestigePoints || 0)) return;
+  for (const s of stats) {
+    if (amounts[s] > 0) allocatePrestigePoints(s, amounts[s]);
+  }
+  closeAllocateModal();
+  notify(`✓ Allocated ${total} points.`);
+}
+
+// Prestige points awarded scale as a geometric series (1.02^0 + 1.02^1 + ... + 1.02^(n-1))
+// rather than flat 1-per-level — gentle at low levels, escalating faster at high levels.
+const PRESTIGE_POINTS_BASE = 1.02;
+function prestigePointsForLevels(n) {
+  n = Math.max(0, Math.floor(n));
+  if (n === 0) return 0;
+  if (PRESTIGE_POINTS_BASE === 1) return n;
+  return Math.round((Math.pow(PRESTIGE_POINTS_BASE, n) - 1) / (PRESTIGE_POINTS_BASE - 1));
+}
+
+function doPrestige(mode) {
+  closePrestigeModal();
+  const levelsToBank = G.lv - 1;
+  let earned;
+  if (mode === 'weaken') {
+    earned = prestigePointsForLevels(levelsToBank);
+    G.weakenPoints = (G.weakenPoints || 0) + earned;
+  } else {
+    earned = levelsToBank;
+    G.prestigePoints = (G.prestigePoints || 0) + earned;
+  }
+  G.prestigeCount++;
+  if (!G.prestigeChoices) G.prestigeChoices = { xp: 0, spd: 0, atk: 0, hp: 0, healspd: 0 };
+  G.bounty = 0;
+  G.lv = 1; G.xp = 0; G.gold = 0;
+  G.beatenEnemies = {};
+  G.zoneId = 'vox_machina_camp';
+  G.enemyIdx = 0;
+  G.megaActive = false;
+  applyRiftColor(getZone()?.color);
+  stopFight();
+  recalcBaseStats();
+  G.playerHp = getMaxHp();
+  spawnEnemy();
+  updateAll();
+  saveGame();
+  if (mode === 'weaken') {
+    notify(`◈ Prestige! +${fmtNum(earned)} weaken points banked (${fmtNum(G.weakenPoints)} total).`);
+  } else {
+    notify(`◈ Prestige! +${fmtNum(earned)} stat points banked (${fmtNum(G.prestigePoints)} total).`);
+  }
+}
+
+// Allocate prestige points to a stat (xp/spd/atk/hp/healspd/gold). Returns true on success.
+function allocatePrestigePoints(stat, amount) {
+  amount = Math.floor(amount);
+  if (amount <= 0) return false;
+  if (!G.prestigePoints || amount > G.prestigePoints) return false;
+  if (!G.prestigeChoices) G.prestigeChoices = { xp: 0, spd: 0, atk: 0, hp: 0, healspd: 0 };
+  if (stat === 'xp') {
+    G.bankedLevels += amount;
+    G.prestigeChoices.xp = (G.prestigeChoices.xp || 0) + amount;
+  } else if (['spd','atk','hp','healspd'].includes(stat)) {
+    G.prestigeChoices[stat] = (G.prestigeChoices[stat] || 0) + amount;
+  } else {
+    return false;
+  }
+  G.prestigePoints -= amount;
+  recalcBaseStats();
+  updateAll();
+  saveGame();
+  return true;
+}
+
+// Spend weaken points reducing a specific enemy's attack. Each point = -0.10 atk, floored at 0.15.
+function weakenEnemy(zoneId, enemyIdx, amount, stat) {
+  stat = stat === 'hp' ? 'hp' : 'atk';
+  amount = Math.floor(amount);
+  if (amount <= 0) return 0;
+  if (!G.weakenPoints || amount > G.weakenPoints) return 0;
+  const zone = ZONES.find(z => z.id === zoneId);
+  const enemy = zone?.enemies[enemyIdx];
+  if (!enemy) return 0;
+  const key = `${zoneId}__${enemyIdx}`;
+  const debuff = getEnemyDebuff(zoneId, enemyIdx);
+  const currentPoints = debuff[stat] || 0;
+
+  let actualAmount;
+  if (stat === 'atk') {
+    const currentAtk = getEffectiveEnemyAtk(zoneId, enemyIdx);
+    const maxReduction = Math.max(0, currentAtk - 0.15);
+    const maxAdditionalPoints = Math.floor(maxReduction / 0.10 + 1e-9);
+    actualAmount = Math.min(amount, maxAdditionalPoints);
+  } else {
+    const currentHp = getEffectiveEnemyHp(zoneId, enemyIdx);
+    const maxReduction = Math.max(0, currentHp - 10);
+    const maxAdditionalPoints = Math.floor(maxReduction / 2 + 1e-9);
+    actualAmount = Math.min(amount, maxAdditionalPoints);
+  }
+  if (actualAmount <= 0) return 0;
+
+  debuff[stat] = currentPoints + actualAmount;
+  G.enemyDebuffs[key] = debuff;
+  G.weakenPoints -= actualAmount;
+  updateAll();
+  saveGame();
+  return actualAmount;
+}
+
+// Spend normal prestige points lowering a specific enemy's level requirement by 1 per point, floored at level 1.
+function lowerEnemyLvReq(zoneId, enemyIdx, amount) {
+  amount = Math.floor(amount);
+  if (amount <= 0) return 0;
+  if (!G.prestigePoints || amount > G.prestigePoints) return 0;
+  const zone = ZONES.find(z => z.id === zoneId);
+  const enemy = zone?.enemies[enemyIdx];
+  if (!enemy) return 0;
+  const key = `${zoneId}__${enemyIdx}`;
+  const debuff = getEnemyDebuff(zoneId, enemyIdx);
+  const currentPoints = debuff.lvreq || 0;
+
+  const currentReq = effectiveReqLv(enemy.lv, zoneId, enemyIdx);
+  const maxAdditionalPoints = Math.max(0, currentReq - 1);
+  const actualAmount = Math.min(amount, maxAdditionalPoints);
+  if (actualAmount <= 0) return 0;
+
+  debuff.lvreq = currentPoints + actualAmount;
+  G.enemyDebuffs[key] = debuff;
+  G.prestigePoints -= actualAmount;
+  updateAll();
+  saveGame();
+  return actualAmount;
+}
+
+// Returns the (possibly legacy-migrated) debuff object for an enemy: { atk: N, hp: N }
+function getEnemyDebuff(zoneId, enemyIdx) {
+  const key = `${zoneId}__${enemyIdx}`;
+  const raw = G.enemyDebuffs[key];
+  if (typeof raw === 'number') {
+    // Migrate legacy format (plain number = atk points) to the new structured format.
+    const migrated = { atk: raw, hp: 0, lvreq: 0 };
+    G.enemyDebuffs[key] = migrated;
+    return migrated;
+  }
+  if (raw && typeof raw === 'object') {
+    if (typeof raw.lvreq !== 'number' || isNaN(raw.lvreq)) raw.lvreq = 0;
+    return raw;
+  }
+  return { atk: 0, hp: 0, lvreq: 0 };
+}
+
+// Returns the effective attack for a given enemy after any weaken-points have been spent on it.
+function getEffectiveEnemyAtk(zoneId, enemyIdx) {
+  const zone = ZONES.find(z => z.id === zoneId);
+  const enemy = zone?.enemies[enemyIdx];
+  if (!enemy) return 0;
+  const points = getEnemyDebuff(zoneId, enemyIdx).atk || 0;
+  return Math.max(0.15, +(enemy.atk - points * 0.10).toFixed(3));
+}
+
+// Returns the effective HP for a given enemy after any weaken-points have been spent on it.
+function getEffectiveEnemyHp(zoneId, enemyIdx) {
+  const zone = ZONES.find(z => z.id === zoneId);
+  const enemy = zone?.enemies[enemyIdx];
+  if (!enemy) return 0;
+  const points = getEnemyDebuff(zoneId, enemyIdx).hp || 0;
+  return Math.max(10, +(enemy.hp - points * 2).toFixed(3));
+}
+
+// "Overwhelmed" attack scaling for mega fights: each step in multiplier adds 15% attack
+// over the previous (mult 1 = ×1, mult 2 = ×1.15, mult 3 = ×1.32, ... mult 10 = ×3.518).
+// Represents the group closing in and landing more effective hits together, without
+// scaling attack linearly with the (much larger) HP pool.
+function getMegaOverwhelmMult(mult) {
+  return Math.pow(1.15, Math.max(0, mult - 1));
+}
+
+// ── COMBAT LOG ────────────────────────────────────────────────────────────────
+let logLines = [];
+function addLog(msg, cls = '') {
+  logLines.push({ msg, cls });
+  if (logLines.length > 60) logLines.shift();
+  const el = document.getElementById('combat-log');
+  const div = document.createElement('div');
+  div.className = cls;
+  div.innerHTML = msg;
+  el.appendChild(div);
+  if (el.children.length > 60) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'zones') renderZones();
+  if (id === 'prestige') updatePrestigePage();
+  if (id === 'crew') renderCrew();
+  if (id === 'weaken') renderWeaken();
+  if (id === 'lvreq') renderLvReq();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n < 0) return '-' + fmtNum(-n);
+  if (n < 100) return (Math.round(n * 100) / 100).toString();
+  const exp = Math.floor(Math.log10(n));
+  const mant = n / Math.pow(10, exp);
+  return mant.toFixed(2) + 'e' + exp;
+}
+function fmtLevel(n) {
+  return Math.round(n).toLocaleString('en-US');
+}
+
+let notifTimer;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── IMPORT / EXPORT ───────────────────────────────────────────────────────────
+let impexpMode = 'export';
+
+function openExportModal() {
+  saveGame(); // make sure localStorage reflects current state
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) { notify('Nothing to export yet'); return; }
+  const code = btoa(unescape(encodeURIComponent(raw)));
+  impexpMode = 'export';
+  document.getElementById('impexp-title').textContent = '⬆ EXPORT SAVE';
+  document.getElementById('impexp-sub').textContent = 'Copy this code to back up or transfer your save';
+  const ta = document.getElementById('impexp-textarea');
+  ta.value = code;
+  ta.readOnly = true;
+  document.getElementById('impexp-action-btn').textContent = '📋 COPY TO CLIPBOARD';
+  document.getElementById('impexp-status').textContent = '';
+  document.getElementById('impexp-modal-overlay').classList.add('open');
+  setTimeout(() => { ta.focus(); ta.select(); }, 50);
+}
+
+function openImportModal() {
+  impexpMode = 'import';
+  document.getElementById('impexp-title').textContent = '⬇ IMPORT SAVE';
+  document.getElementById('impexp-sub').textContent = 'Paste a save code below — this will overwrite your current progress';
+  const ta = document.getElementById('impexp-textarea');
+  ta.value = '';
+  ta.readOnly = false;
+  document.getElementById('impexp-action-btn').textContent = '⬇ IMPORT';
+  document.getElementById('impexp-status').textContent = '';
+  document.getElementById('impexp-modal-overlay').classList.add('open');
+  setTimeout(() => ta.focus(), 50);
+}
+
+function closeImpExpModal() {
+  document.getElementById('impexp-modal-overlay').classList.remove('open');
+}
+
+function impexpAction() {
+  const ta = document.getElementById('impexp-textarea');
+  const statusEl = document.getElementById('impexp-status');
+
+  if (impexpMode === 'export') {
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, 999999);
+    const fallbackCopy = () => {
+      try {
+        document.execCommand('copy');
+        statusEl.textContent = 'Copied to clipboard!';
+      } catch (e) {
+        statusEl.textContent = 'Copy failed — select the text and copy manually.';
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(
+        () => { statusEl.textContent = 'Copied to clipboard!'; },
+        fallbackCopy
+      );
+    } else {
+      fallbackCopy();
+    }
+    return;
+  }
+
+  // import mode
+  const code = ta.value.trim();
+  if (!code) { statusEl.textContent = 'Paste a save code first.'; return; }
+
+  let jsonStr;
+  try {
+    jsonStr = decodeURIComponent(escape(atob(code)));
+  } catch (e) {
+    statusEl.textContent = 'Invalid save code — check for typos or missing characters.';
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (e) {
+    statusEl.textContent = 'Invalid save code — check for typos or missing characters.';
+    return;
+  }
+
+  if (typeof parsed.lv !== 'number' || typeof parsed.gold !== 'number') {
+    statusEl.textContent = 'That code doesn\'t look like a valid save.';
+    return;
+  }
+
+  if (!confirm('Import this save? Your current progress will be overwritten.')) return;
+
+  localStorage.setItem(SAVE_KEY, jsonStr);
+  statusEl.textContent = 'Imported! Reloading…';
+  setTimeout(() => location.reload(), 400);
+}
+
+// ── SAVE / LOAD ───────────────────────────────────────────────────────────────
+function saveGame() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify({
+    lv: G.lv, xp: G.xp, gold: G.gold,
+    prestigeCount: G.prestigeCount,
+    bankedLevels: G.bankedLevels,
+    prestigeChoices: G.prestigeChoices,
+    prestigePoints: G.prestigePoints,
+    weakenPoints: G.weakenPoints,
+    enemyDebuffs: G.enemyDebuffs,
+    megaMultiplier: G.megaMultiplier,
+    megaPanelHidden: G.megaPanelHidden,
+    zoneId: G.zoneId, enemyIdx: G.enemyIdx,
+    bounty: G.bounty,
+    playerHp: G.playerHp,
+    enemyHp: G.enemyHp,
+    enemyMaxHp: G.enemyMaxHp,
+    fightRunning: G.fightRunning,
+    offlineMode: G.offlineMode,
+    offlineStart: G.offlineStart,
+    beatenEnemies: G.beatenEnemies,
+    crewRecruited: G.crewRecruited,
+    lastSaved: Date.now(),
+  }));
+  const el = document.getElementById('save-status');
+  if (el) {
+    const now = new Date();
+    el.textContent = 'Saved ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    G.lv           = d.lv           ?? 1;
+    G.xp           = d.xp           ?? 0;
+    G.gold         = d.gold         ?? 0;
+    G.prestigeCount= d.prestigeCount?? 0;
+    G.bankedLevels = d.bankedLevels ?? 0;
+    G.prestigeChoices = Object.assign({ xp: 0, spd: 0, atk: 0, hp: 0, healspd: 0 }, d.prestigeChoices ?? {});
+    for (const k of Object.keys(G.prestigeChoices)) {
+      if (typeof G.prestigeChoices[k] !== 'number' || isNaN(G.prestigeChoices[k])) G.prestigeChoices[k] = 0;
+    }
+    G.prestigePoints = (typeof d.prestigePoints === 'number' && !isNaN(d.prestigePoints)) ? d.prestigePoints : 0;
+    G.weakenPoints = (typeof d.weakenPoints === 'number' && !isNaN(d.weakenPoints)) ? d.weakenPoints : 0;
+    G.enemyDebuffs = (d.enemyDebuffs && typeof d.enemyDebuffs === 'object') ? d.enemyDebuffs : {};
+    for (const k of Object.keys(G.enemyDebuffs)) {
+      const v = G.enemyDebuffs[k];
+      if (typeof v === 'number') {
+        if (isNaN(v)) delete G.enemyDebuffs[k];
+        // else: legacy numeric format, migrated lazily by getEnemyDebuff() on first access
+      } else if (v && typeof v === 'object') {
+        if (typeof v.atk !== 'number' || isNaN(v.atk)) v.atk = 0;
+        if (typeof v.hp !== 'number' || isNaN(v.hp)) v.hp = 0;
+      } else {
+        delete G.enemyDebuffs[k];
+      }
+    }
+    G.megaMultiplier = ([1,2,3,4,5,6,7,8,9,10].includes(d.megaMultiplier)) ? d.megaMultiplier : 1;
+    G.megaPanelHidden = !!d.megaPanelHidden;
+    G.megaActive = false;
+    G.zoneId       = d.zoneId       ?? 'vox_machina_camp';
+    G.enemyIdx     = d.enemyIdx     ?? 0;
+    G.bounty       = d.bounty       ?? 0;
+    G.offlineMode  = d.offlineMode  ?? false;
+    G.offlineStart = d.offlineStart ?? null;
+    G.beatenEnemies = d.beatenEnemies ?? {};
+    G.crewRecruited = d.crewRecruited ?? [];
+    recalcBaseStats();
+    G.playerHp = Math.min(d.playerHp ?? getMaxHp(), getMaxHp());
+    G.enemyHp  = d.enemyHp ?? 0;
+    G.enemyMaxHp = d.enemyMaxHp ?? 0;
+    // always reset live combat state — will be restarted after offline calc
+    G.isHealing    = false;
+    G.fightRunning = false;
+    G.ambushActive = false;
+    G.ambushPending= false;
+
+    // ── OFFLINE PROGRESS ─────────────────────────────────────────────────────
+    if (d.lastSaved) {
+      const wasOffline = !!d.offlineMode;
+
+      // Use offlineStart when available — immune to auto-save overwriting lastSaved
+      const refTime = wasOffline && d.offlineStart ? d.offlineStart : d.lastSaved;
+      const elapsedSec = Math.max(0, (Date.now() - refTime) / 1000);
+
+      if (elapsedSec >= 5) {
+        if (wasOffline) {
+          const elapsedHours = elapsedSec / 3600;
+          const totalXp = Math.floor(calcOfflineXpRate() * elapsedHours * OFFLINE_EFF);
+
+          if (totalXp > 0) {
+            let levelsGained = 0;
+            G.xp += totalXp;
+            let needed = xpNeeded(G.lv);
+            while (G.xp >= needed) {
+              G.xp -= needed;
+              G.lv++;
+              levelsGained++;
+              recalcBaseStats();
+              needed = xpNeeded(G.lv);
+            }
+            G.playerHp = Math.min(G.playerHp, getMaxHp());
+            G._offlineCombat = { xp: totalXp, levels: levelsGained, elapsedSec };
+          }
+        }
+        
+        // ── Passive healing while away ──
+        if (!wasOffline) {
+          const maxHp = getMaxHp();
+          if (G.playerHp < maxHp) {
+            const healSpeed = getEffectiveHealingSpeedPerHour();
+            const healAmt = Math.min(Math.floor(healSpeed * elapsedSec / 3600), maxHp - G.playerHp);
+            if (healAmt > 0) {
+              G.playerHp = Math.min(maxHp, G.playerHp + healAmt);
+              G._offlineHealAmt = healAmt;
+            }
+          }
+        }
+
+        G._offlineElapsed = elapsedSec;
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+  } catch(e) { console.error('Load failed', e); }
+}
+
+// ── RESET ────────────────────────────────────────────────────────────────────
+function resetGame() {
+  if (!confirm('Reset ALL data? This cannot be undone.')) return;
+  stopFight();
+  localStorage.removeItem(SAVE_KEY);
+  G.lv = 1; G.xp = 0; G.gold = 0;
+  G.prestigeCount = 0; G.bankedLevels = 0;
+  G.zoneId = 'vox_machina_camp'; G.enemyIdx = 0;
+  applyRiftColor(getZone()?.color);
+  G.bounty = 0;
+  G.offlineMode = false;
+  G.offlineStart = null;
+  G.beatenEnemies = {};
+  G.crewRecruited = [];
+  G.prestigeChoices = { xp: 0, spd: 0, atk: 0, hp: 0, healspd: 0 };
+  G.prestigePoints = 0;
+  G.weakenPoints = 0;
+  G.enemyDebuffs = {};
+  G.megaMultiplier = 1;
+  G.megaPanelHidden = false;
+  G.megaActive = false;
+  hideOfflineOverlay();
+  stopOfflineTicker();
+  recalcBaseStats();
+  G.playerHp = getMaxHp();
+  spawnEnemy();
+  logLines = [];
+  document.getElementById('combat-log').innerHTML = '';
+  updateAll();
+  addLog('🔄 Game reset.', 'log-sys');
+  notify('Game reset!');
+  const el = document.getElementById('save-status');
+  if (el) el.textContent = 'Never saved';
+}
+
+// ── AUTO SAVE ─────────────────────────────────────────────────────────────────
+setInterval(saveGame, 30000); // auto-save every 30 seconds
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadGame();
+applyRiftColor(getZone()?.color);
+updateAll();
+updateOfflineBtn();
+
+// ── Offline summary notification ──
+if (G._offlineElapsed !== undefined && G._offlineElapsed >= 5) {
+  const totalSec = Math.floor(G._offlineElapsed);
+  const hrs  = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  const timeStr = hrs > 0 ? `${hrs}h ${mins}m`
+                : mins > 0 ? `${mins}m ${secs}s`
+                : `${secs}s`;
+
+  if (G._offlineCombat) {
+    const oc = G._offlineCombat;
+    const parts = [];
+    if (oc.xp     > 0) parts.push(`+${fmtNum(oc.xp)} XP`);
+    if (oc.levels > 0) parts.push(`+${oc.levels} lvl`);
+    const detail = parts.length ? parts.join(' — ') : 'no XP gained';
+    addLog(`⏱ Offline ${timeStr}: ${detail} (80% efficiency)`, 'log-sys');
+    notify(`⏱ Away ${timeStr}: ${detail}`);
+  } else if (G._offlineHealAmt > 0) {
+    addLog(`⏱ Offline ${timeStr}: healed +${G._offlineHealAmt} HP`, 'log-heal');
+    notify(`⏱ Away ${timeStr}: healed +${G._offlineHealAmt} HP`);
+  } else {
+    addLog(`⏱ Offline ${timeStr}.`, 'log-sys');
+  }
+} else {
+  addLog('⚔️ Welcome to Rival Road. Choose a zone and fight!', 'log-sys');
+}
+delete G._offlineElapsed; delete G._offlineHealAmt;
+delete G._offlineCombat;  delete G._resumeFight;
+
+// ── Resume heal state ──
+if (G.offlineMode) {
+  showOfflineOverlay(G._offlineCombat || null);
+} else {
+  G.offlineMode = false;
+  updateOfflineBtn();
+  if (!G.fightRunning && G.playerHp < getMaxHp()) {
+    startHeal();
+  }
+}
+
+if (G._offlineHealAmt > 0) {
+  addLog(`💚 Healed +${fmtNum(G._offlineHealAmt)} HP while away.`, 'log-heal');
+}
+delete G._offlineHealAmt;
+</script>
+<!-- ── PRESTIGE CHOICE MODAL ─────────────────────────────────────────────── -->
+<div class="prestige-modal-overlay" id="prestige-modal-overlay">
+  <div class="prestige-modal">
+    <div class="prestige-modal-title">◈ NEW VOYAGE</div>
+    <div class="prestige-modal-sub" id="prestige-modal-sub">Choose how to bank your levels</div>
+    <button class="alloc-confirm-btn" onclick="doPrestige('normal')" id="prestige-normal-btn">✓ PRESTIGE FOR STATS</button>
+    <button class="alloc-confirm-btn" onclick="doPrestige('weaken')" id="prestige-weaken-btn" style="border-color:var(--red);color:var(--red);margin-top:6px;">💢 PRESTIGE FOR WEAKEN POINTS</button>
+    <button class="prestige-cancel-btn" onclick="closePrestigeModal()">✕ CANCEL</button>
+  </div>
+</div>
+
+<div class="prestige-modal-overlay" id="allocate-modal-overlay">
+  <div class="prestige-modal">
+    <div class="prestige-modal-title">◈ SPEND POINTS</div>
+    <div class="pool-bar">Available: <b id="alloc-pool">0</b> points</div>
+    <div class="alloc-row">
+      <span class="alloc-icon">📜</span>
+      <span class="alloc-info">
+        <div class="alloc-name">XP DISCOUNT</div>
+        <div class="alloc-desc">Diminishing XP cost reduction</div>
+      </span>
+      <span class="alloc-stepper">
+        <button class="alloc-btn" onclick="allocStep('xp',-1)">−</button>
+        <input class="alloc-input" id="alloc-xp" type="number" min="0" value="0" oninput="allocClamp('xp')">
+        <button class="alloc-btn" onclick="allocStep('xp',1)">+</button>
+      </span>
+    </div>
+    <div class="alloc-row">
+      <span class="alloc-icon">💨</span>
+      <span class="alloc-info">
+        <div class="alloc-name">SPEED +1%/pt</div>
+        <div class="alloc-desc">Permanently multiply base SPD</div>
+      </span>
+      <span class="alloc-stepper">
+        <button class="alloc-btn" onclick="allocStep('spd',-1)">−</button>
+        <input class="alloc-input" id="alloc-spd" type="number" min="0" value="0" oninput="allocClamp('spd')">
+        <button class="alloc-btn" onclick="allocStep('spd',1)">+</button>
+      </span>
+    </div>
+    <div class="alloc-row">
+      <span class="alloc-icon">⚔️</span>
+      <span class="alloc-info">
+        <div class="alloc-name">ATTACK +1%/pt</div>
+        <div class="alloc-desc">Permanently multiply base ATK</div>
+      </span>
+      <span class="alloc-stepper">
+        <button class="alloc-btn" onclick="allocStep('atk',-1)">−</button>
+        <input class="alloc-input" id="alloc-atk" type="number" min="0" value="0" oninput="allocClamp('atk')">
+        <button class="alloc-btn" onclick="allocStep('atk',1)">+</button>
+      </span>
+    </div>
+    <div class="alloc-row">
+      <span class="alloc-icon">❤️</span>
+      <span class="alloc-info">
+        <div class="alloc-name">HP +1%/pt</div>
+        <div class="alloc-desc">Permanently multiply base HP</div>
+      </span>
+      <span class="alloc-stepper">
+        <button class="alloc-btn" onclick="allocStep('hp',-1)">−</button>
+        <input class="alloc-input" id="alloc-hp" type="number" min="0" value="0" oninput="allocClamp('hp')">
+        <button class="alloc-btn" onclick="allocStep('hp',1)">+</button>
+      </span>
+    </div>
+    <div class="alloc-row">
+      <span class="alloc-icon">💗</span>
+      <span class="alloc-info">
+        <div class="alloc-name">HEAL SPEED +1%/pt</div>
+        <div class="alloc-desc">Permanently multiply healing speed</div>
+      </span>
+      <span class="alloc-stepper">
+        <button class="alloc-btn" onclick="allocStep('healspd',-1)">−</button>
+        <input class="alloc-input" id="alloc-healspd" type="number" min="0" value="0" oninput="allocClamp('healspd')">
+        <button class="alloc-btn" onclick="allocStep('healspd',1)">+</button>
+      </span>
+    </div>
+    <button class="alloc-confirm-btn" id="alloc-confirm-btn" onclick="confirmAllocation()">✓ CONFIRM</button>
+    <button class="prestige-cancel-btn" onclick="closeAllocateModal()">✕ CANCEL</button>
+  </div>
+</div>
+
+<div class="prestige-modal-overlay" id="impexp-modal-overlay">
+  <div class="prestige-modal">
+    <div class="prestige-modal-title" id="impexp-title" style="color:var(--blue);">⬆ EXPORT SAVE</div>
+    <div class="prestige-modal-sub" id="impexp-sub">Copy this code to back up or transfer your save</div>
+    <textarea class="impexp-textarea" id="impexp-textarea" readonly spellcheck="false"></textarea>
+    <div id="impexp-status" style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:6px;min-height:12px;"></div>
+    <button class="impexp-action-btn" id="impexp-action-btn" onclick="impexpAction()"></button>
+    <button class="prestige-cancel-btn" onclick="closeImpExpModal()">✕ CLOSE</button>
+  </div>
+</div>
+</body>
+</html>
